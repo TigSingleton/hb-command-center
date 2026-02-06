@@ -1,6 +1,72 @@
 import React, { useState } from 'react';
 import { generateAgentResponse } from '../lib/ai';
 
+/* ─── Agent Icon Components ─── */
+
+const IconDirector: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {/* Clapperboard / film director */}
+        <path d="M4 20h16a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z" />
+        <path d="M3 10h18" />
+        <path d="M7 6l2-4" />
+        <path d="M12 6l2-4" />
+        <path d="M17 6l2-4" />
+    </svg>
+);
+
+const IconAlchemist: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {/* Flask / alchemy */}
+        <path d="M9 3h6" />
+        <path d="M10 3v6.5L4 19a1 1 0 00.87 1.5h14.26A1 1 0 0020 19l-6-9.5V3" />
+        <path d="M8.5 14h7" />
+    </svg>
+);
+
+const IconMuse: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {/* Music note / inspiration */}
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+    </svg>
+);
+
+const IconProducer: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {/* Sliders / mixing board */}
+        <line x1="4" y1="21" x2="4" y2="14" />
+        <line x1="4" y1="10" x2="4" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12" y2="3" />
+        <line x1="20" y1="21" x2="20" y2="16" />
+        <line x1="20" y1="12" x2="20" y2="3" />
+        <line x1="1" y1="14" x2="7" y2="14" />
+        <line x1="9" y1="8" x2="15" y2="8" />
+        <line x1="17" y1="16" x2="23" y2="16" />
+    </svg>
+);
+
+const IconInterviewer: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {/* Microphone / depth */}
+        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+        <path d="M19 10v2a7 7 0 01-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+);
+
+const AGENT_ICONS: Record<string, React.FC<{ color: string }>> = {
+    DIRECTOR: IconDirector,
+    ALCHEMIST: IconAlchemist,
+    MUSE: IconMuse,
+    PRODUCER: IconProducer,
+    INTERVIEWER: IconInterviewer,
+};
+
+/* ─── Agent Definitions ─── */
+
 const AGENTS = [
     {
         id: 'DIRECTOR',
@@ -39,6 +105,8 @@ const AGENTS = [
     },
 ];
 
+/* ─── Layout Component ─── */
+
 export const Layout: React.FC = () => {
     const [activeAgent, setActiveAgent] = useState(AGENTS[0]);
     const [input, setInput] = useState('');
@@ -52,6 +120,8 @@ export const Layout: React.FC = () => {
         setOutput(response.markdown);
         setLoading(false);
     };
+
+    const AgentIcon = AGENT_ICONS[activeAgent.id];
 
     return (
         <div className="flex h-screen font-sans overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1117 0%, #1A1F24 100%)' }}>
@@ -68,7 +138,7 @@ export const Layout: React.FC = () => {
 
             {/* ─── SIDEBAR ─── */}
             <aside
-                className="w-72 flex flex-col relative z-20"
+                className="w-[280px] flex flex-col relative z-20 shrink-0"
                 style={{
                     background: 'rgba(13, 17, 23, 0.8)',
                     backdropFilter: 'blur(24px)',
@@ -77,29 +147,30 @@ export const Layout: React.FC = () => {
                 role="navigation"
                 aria-label="Agent Selection"
             >
-                {/* Logo */}
-                <div className="p-8 pb-6">
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black tracking-[0.15em] gradient-text-brand">
+                {/* Logo - generous top/left padding */}
+                <div className="px-7 pt-8 pb-6">
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-[22px] font-black tracking-[0.15em] gradient-text-brand">
                             HBHQ
                         </span>
-                        <span className="text-lg font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+                        <span className="text-base font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
                             CMD
                         </span>
                     </div>
-                    <div className="mt-1 text-[10px] font-medium tracking-[0.25em] uppercase" style={{ color: '#6B6B6B' }}>
+                    <div className="mt-1.5 text-[9px] font-medium tracking-[0.3em] uppercase" style={{ color: '#6B6B6B' }}>
                         Command Center
                     </div>
                     <div
-                        className="mt-6 h-px w-full"
+                        className="mt-7 h-px w-full"
                         style={{ background: 'linear-gradient(to right, rgba(255, 100, 166, 0.2), rgba(3, 191, 174, 0.2), transparent)' }}
                     />
                 </div>
 
-                {/* Agent List */}
-                <nav className="flex-1 px-4 space-y-1 overflow-y-auto py-2" aria-label="AI Agents">
+                {/* Agent List - more spacing */}
+                <nav className="flex-1 px-5 space-y-2.5 overflow-y-auto py-3" aria-label="AI Agents">
                     {AGENTS.map(agent => {
                         const isActive = activeAgent.id === agent.id;
+                        const Icon = AGENT_ICONS[agent.id];
                         return (
                             <button
                                 key={agent.id}
@@ -107,7 +178,7 @@ export const Layout: React.FC = () => {
                                     setActiveAgent(agent);
                                     setOutput(null);
                                 }}
-                                className="w-full group relative flex items-center p-4 rounded-xl transition-all duration-200"
+                                className="w-full group relative flex items-center py-4 px-4 rounded-xl transition-all duration-200"
                                 style={{
                                     background: isActive ? `rgba(${agent.accentRgb}, 0.08)` : 'transparent',
                                     border: isActive ? `1px solid rgba(${agent.accentRgb}, 0.15)` : '1px solid transparent',
@@ -123,21 +194,15 @@ export const Layout: React.FC = () => {
                                     />
                                 )}
 
-                                {/* Agent icon dot */}
+                                {/* Agent icon */}
                                 <div
-                                    className="w-9 h-9 rounded-lg flex items-center justify-center mr-3.5 transition-all duration-200 shrink-0"
+                                    className="w-10 h-10 rounded-lg flex items-center justify-center mr-4 transition-all duration-200 shrink-0"
                                     style={{
-                                        background: isActive ? `rgba(${agent.accentRgb}, 0.15)` : 'rgba(255, 255, 255, 0.03)',
+                                        background: isActive ? `rgba(${agent.accentRgb}, 0.12)` : 'rgba(255, 255, 255, 0.03)',
                                         border: `1px solid ${isActive ? `rgba(${agent.accentRgb}, 0.2)` : 'rgba(255, 255, 255, 0.04)'}`,
                                     }}
                                 >
-                                    <div
-                                        className="w-2 h-2 rounded-full transition-all duration-200"
-                                        style={{
-                                            background: isActive ? agent.accentColor : 'rgba(255, 255, 255, 0.15)',
-                                            boxShadow: isActive ? `0 0 8px rgba(${agent.accentRgb}, 0.4)` : 'none',
-                                        }}
-                                    />
+                                    <Icon color={isActive ? agent.accentColor : 'rgba(255, 255, 255, 0.2)'} />
                                 </div>
 
                                 <div className="text-left min-w-0">
@@ -148,7 +213,7 @@ export const Layout: React.FC = () => {
                                         {agent.name}
                                     </div>
                                     <div
-                                        className="text-[10px] font-medium tracking-wide mt-0.5 truncate"
+                                        className="text-[10px] font-medium tracking-wide mt-1 truncate"
                                         style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
                                     >
                                         {agent.desc}
@@ -158,7 +223,7 @@ export const Layout: React.FC = () => {
                                 {/* Hover overlay */}
                                 <div
                                     className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                                    style={{ background: `linear-gradient(135deg, rgba(${agent.accentRgb}, 0.03), transparent)` }}
+                                    style={{ background: `linear-gradient(135deg, rgba(${agent.accentRgb}, 0.04), transparent)` }}
                                 />
                             </button>
                         );
@@ -166,8 +231,8 @@ export const Layout: React.FC = () => {
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="p-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <div className="flex items-center gap-3 group cursor-default">
+                <div className="px-7 py-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                    <div className="flex items-center gap-3 cursor-default">
                         <div
                             className="w-2 h-2 rounded-full animate-pulse"
                             style={{ background: '#03BFAE', boxShadow: '0 0 8px rgba(3, 191, 174, 0.4)' }}
@@ -180,19 +245,19 @@ export const Layout: React.FC = () => {
             </aside>
 
             {/* ─── MAIN STAGE ─── */}
-            <main className="flex-1 flex flex-col relative z-10" role="main">
+            <main className="flex-1 flex flex-col relative z-10 min-w-0" role="main">
 
-                {/* TOP HEADER BAR */}
+                {/* TOP HEADER BAR - more padding */}
                 <header
-                    className="h-20 flex items-center px-10 justify-between shrink-0"
+                    className="h-[72px] flex items-center px-12 justify-between shrink-0"
                     style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}
                 >
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-light tracking-[0.15em] uppercase" style={{ color: '#6B6B6B' }}>
+                        <span className="text-xs font-light tracking-[0.2em] uppercase" style={{ color: '#6B6B6B' }}>
                             Agent //
                         </span>
                         <h2
-                            className="text-2xl font-bold tracking-tight"
+                            className="text-xl font-bold tracking-tight"
                             style={{ color: activeAgent.accentColor }}
                         >
                             {activeAgent.name}
@@ -210,28 +275,22 @@ export const Layout: React.FC = () => {
                             {activeAgent.id}_V2.4
                         </div>
                         <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
                             style={{
                                 background: `rgba(${activeAgent.accentRgb}, 0.1)`,
                                 border: `1px solid rgba(${activeAgent.accentRgb}, 0.15)`,
                             }}
                         >
-                            <div
-                                className="w-1.5 h-1.5 rounded-full"
-                                style={{
-                                    background: activeAgent.accentColor,
-                                    boxShadow: `0 0 6px rgba(${activeAgent.accentRgb}, 0.5)`,
-                                }}
-                            />
+                            <AgentIcon color={activeAgent.accentColor} />
                         </div>
                     </div>
                 </header>
 
-                {/* CONTENT AREA */}
-                <div className="flex-1 overflow-y-auto px-10 pb-10 pt-6 flex gap-8">
+                {/* CONTENT AREA - more padding, adjusted columns */}
+                <div className="flex-1 overflow-y-auto px-12 pb-10 pt-8 flex gap-10">
 
-                    {/* INPUT COLUMN */}
-                    <div className="flex-1 max-w-2xl flex flex-col gap-6 animate-slide-in-up">
+                    {/* INPUT COLUMN - narrower (roughly 38% of content) */}
+                    <div className="w-[38%] shrink-0 flex flex-col gap-6 animate-slide-in-up">
                         <div
                             className="glass-panel-elevated rounded-2xl p-8 relative overflow-hidden group"
                         >
@@ -239,7 +298,7 @@ export const Layout: React.FC = () => {
                             <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />
 
                             {/* Label row */}
-                            <div className="flex justify-between items-center mb-5 relative z-10">
+                            <div className="flex justify-between items-center mb-6 relative z-10">
                                 <label
                                     className="text-[11px] font-bold tracking-[0.2em] uppercase flex items-center gap-2.5"
                                     style={{ color: '#03BFAE' }}
@@ -259,7 +318,7 @@ export const Layout: React.FC = () => {
                             {/* Textarea */}
                             <textarea
                                 id="agent-input"
-                                className="w-full h-60 rounded-xl p-5 text-sm font-light leading-relaxed resize-none transition-all duration-200 relative z-10"
+                                className="w-full h-56 rounded-xl p-5 text-sm font-light leading-relaxed resize-none transition-all duration-200 relative z-10"
                                 style={{
                                     background: 'rgba(0, 0, 0, 0.3)',
                                     border: '1px solid rgba(255, 255, 255, 0.04)',
@@ -285,7 +344,7 @@ export const Layout: React.FC = () => {
                             />
 
                             {/* Footer row */}
-                            <div className="flex justify-between items-center mt-5 relative z-10">
+                            <div className="flex justify-between items-center mt-6 relative z-10">
                                 <div className="text-[10px] uppercase tracking-[0.15em] font-medium" style={{ color: '#6B6B6B' }}>
                                     {input.length > 0 ? `${input.length} chars` : 'Awaiting input'}
                                 </div>
@@ -293,7 +352,7 @@ export const Layout: React.FC = () => {
                                     onClick={handleRun}
                                     disabled={loading || !input}
                                     className="btn-cta py-3 px-7 rounded-xl text-xs uppercase tracking-[0.12em] flex items-center gap-2"
-                                    aria-label={loading ? 'Processing request' : 'Initialize protocol'}
+                                    aria-label={loading ? 'Processing request' : 'Run protocol'}
                                 >
                                     {loading ? (
                                         <>
@@ -313,8 +372,8 @@ export const Layout: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* OUTPUT COLUMN */}
-                    <div className="flex-1 animate-slide-in-up delay-100">
+                    {/* OUTPUT COLUMN - takes remaining ~62% */}
+                    <div className="flex-1 min-w-0 animate-slide-in-up delay-100">
                         {output ? (
                             <div className="relative rounded-2xl overflow-hidden animate-fade-in">
                                 {/* Gradient border effect */}
