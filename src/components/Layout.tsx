@@ -202,8 +202,8 @@ export const Layout: React.FC = () => {
                                     {agent.name}
                                 </div>
                                 <div
-                                    className="font-medium tracking-wide" style={{ fontSize: '10px', marginTop: '3px' }}
-                                    style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
+                                    className="font-medium tracking-wide"
+                                    style={{ fontSize: '10px', marginTop: '3px', color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
                                 >
                                     {agent.desc}
                                 </div>
