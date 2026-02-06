@@ -2,11 +2,41 @@ import React, { useState } from 'react';
 import { generateAgentResponse } from '../lib/ai';
 
 const AGENTS = [
-    { id: 'DIRECTOR', name: 'THE DIRECTOR', emoji: '🎬', desc: 'Orchestration & Strategy', color: 'text-indigo-400', glow: 'shadow-indigo-500/20' },
-    { id: 'ALCHEMIST', name: 'THE ALCHEMIST', emoji: '⚗️', desc: 'Transmutation & Writing', color: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-    { id: 'MUSE', name: 'THE MUSE', emoji: '⚡️', desc: 'Inspiration & Lyrics', color: 'text-pink-400', glow: 'shadow-pink-500/20' },
-    { id: 'PRODUCER', name: 'THE PRODUCER', emoji: '🎙️', desc: 'Showrunner & Logistics', color: 'text-amber-400', glow: 'shadow-amber-500/20' },
-    { id: 'INTERVIEWER', name: 'THE INTERVIEWER', emoji: '🎤', desc: 'Extraction & Depth', color: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
+    {
+        id: 'DIRECTOR',
+        name: 'THE DIRECTOR',
+        desc: 'Orchestration & Strategy',
+        accentColor: '#818CF8',
+        accentRgb: '129, 140, 248',
+    },
+    {
+        id: 'ALCHEMIST',
+        name: 'THE ALCHEMIST',
+        desc: 'Transmutation & Writing',
+        accentColor: '#34D399',
+        accentRgb: '52, 211, 153',
+    },
+    {
+        id: 'MUSE',
+        name: 'THE MUSE',
+        desc: 'Inspiration & Lyrics',
+        accentColor: '#FF64A6',
+        accentRgb: '255, 100, 166',
+    },
+    {
+        id: 'PRODUCER',
+        name: 'THE PRODUCER',
+        desc: 'Showrunner & Logistics',
+        accentColor: '#FBBF24',
+        accentRgb: '251, 191, 36',
+    },
+    {
+        id: 'INTERVIEWER',
+        name: 'THE INTERVIEWER',
+        desc: 'Extraction & Depth',
+        accentColor: '#22D3EE',
+        accentRgb: '34, 211, 238',
+    },
 ];
 
 export const Layout: React.FC = () => {
@@ -24,167 +54,349 @@ export const Layout: React.FC = () => {
     };
 
     return (
-        <div className="flex h-screen bg-[#050505] text-white/90 font-sans overflow-hidden selection:bg-teal-500/30">
+        <div className="flex h-screen font-sans overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1117 0%, #1A1F24 100%)' }}>
 
-            {/* DECORATIVE BACKGROUND ELEMENTS */}
-            <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none" />
-            <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-900/10 blur-[120px] pointer-events-none" />
+            {/* AMBIENT BACKGROUND GLOWS */}
+            <div
+                className="fixed top-[-30%] left-[-15%] w-[60%] h-[60%] rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(255, 100, 166, 0.04) 0%, transparent 70%)' }}
+            />
+            <div
+                className="fixed bottom-[-30%] right-[-15%] w-[60%] h-[60%] rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(3, 191, 174, 0.04) 0%, transparent 70%)' }}
+            />
 
-            {/* SIDEBAR */}
-            <aside className="w-72 glass-panel border-r border-white/5 flex flex-col relative z-20">
-                <div className="p-8 pb-4">
-                    <h1 className="text-2xl font-bold tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 drop-shadow-sm">
-                        HBHQ<span className="font-thin text-white/30 ml-2">CMD</span>
-                    </h1>
-                    <div className="h-px w-full bg-gradient-to-r from-white/10 to-transparent mt-6" />
+            {/* ─── SIDEBAR ─── */}
+            <aside
+                className="w-72 flex flex-col relative z-20"
+                style={{
+                    background: 'rgba(13, 17, 23, 0.8)',
+                    backdropFilter: 'blur(24px)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.04)',
+                }}
+                role="navigation"
+                aria-label="Agent Selection"
+            >
+                {/* Logo */}
+                <div className="p-8 pb-6">
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black tracking-[0.15em] gradient-text-brand">
+                            HBHQ
+                        </span>
+                        <span className="text-lg font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+                            CMD
+                        </span>
+                    </div>
+                    <div className="mt-1 text-[10px] font-medium tracking-[0.25em] uppercase" style={{ color: '#6B6B6B' }}>
+                        Command Center
+                    </div>
+                    <div
+                        className="mt-6 h-px w-full"
+                        style={{ background: 'linear-gradient(to right, rgba(255, 100, 166, 0.2), rgba(3, 191, 174, 0.2), transparent)' }}
+                    />
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4">
-                    {AGENTS.map(agent => (
-                        <button
-                            key={agent.id}
-                            onClick={() => {
-                                setActiveAgent(agent);
-                                setOutput(null);
-                            }}
-                            className={`w-full group relative flex items-center p-4 rounded-xl transition-all duration-300 border border-transparent
-                            ${activeAgent.id === agent.id
-                                    ? 'bg-white/10 border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.3)]'
-                                    : 'hover:bg-white/5 hover:border-white/5'
-                                }
-                        `}
-                        >
-                            {/* Active Indicator Line */}
-                            {activeAgent.id === agent.id && (
-                                <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-gradient-to-b from-transparent via-${agent.color.split('-')[1]}-400 to-transparent`} />
-                            )}
+                {/* Agent List */}
+                <nav className="flex-1 px-4 space-y-1 overflow-y-auto py-2" aria-label="AI Agents">
+                    {AGENTS.map(agent => {
+                        const isActive = activeAgent.id === agent.id;
+                        return (
+                            <button
+                                key={agent.id}
+                                onClick={() => {
+                                    setActiveAgent(agent);
+                                    setOutput(null);
+                                }}
+                                className="w-full group relative flex items-center p-4 rounded-xl transition-all duration-200"
+                                style={{
+                                    background: isActive ? `rgba(${agent.accentRgb}, 0.08)` : 'transparent',
+                                    border: isActive ? `1px solid rgba(${agent.accentRgb}, 0.15)` : '1px solid transparent',
+                                }}
+                                aria-current={isActive ? 'page' : undefined}
+                                aria-label={`${agent.name} - ${agent.desc}`}
+                            >
+                                {/* Active indicator bar */}
+                                {isActive && (
+                                    <div
+                                        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full"
+                                        style={{ background: `linear-gradient(to bottom, transparent, ${agent.accentColor}, transparent)` }}
+                                    />
+                                )}
 
-                            <span className={`text-2xl mr-4 transition-transform duration-300 group-hover:scale-110 ${activeAgent.id === agent.id ? 'scale-110' : 'opacity-50 group-hover:opacity-100'}`}>
-                                {agent.emoji}
-                            </span>
-                            <div className="text-left">
-                                <div className={`font-bold text-xs tracking-widest transition-colors ${activeAgent.id === agent.id ? 'text-white' : 'text-white/50 group-hover:text-white/80'}`}>
-                                    {agent.name}
+                                {/* Agent icon dot */}
+                                <div
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center mr-3.5 transition-all duration-200 shrink-0"
+                                    style={{
+                                        background: isActive ? `rgba(${agent.accentRgb}, 0.15)` : 'rgba(255, 255, 255, 0.03)',
+                                        border: `1px solid ${isActive ? `rgba(${agent.accentRgb}, 0.2)` : 'rgba(255, 255, 255, 0.04)'}`,
+                                    }}
+                                >
+                                    <div
+                                        className="w-2 h-2 rounded-full transition-all duration-200"
+                                        style={{
+                                            background: isActive ? agent.accentColor : 'rgba(255, 255, 255, 0.15)',
+                                            boxShadow: isActive ? `0 0 8px rgba(${agent.accentRgb}, 0.4)` : 'none',
+                                        }}
+                                    />
                                 </div>
-                                <div className="text-[10px] text-white/30 font-medium tracking-wide mt-0.5">
-                                    {agent.desc}
-                                </div>
-                            </div>
 
-                            {/* Glow effect on hover */}
-                            <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none`} />
-                        </button>
-                    ))}
+                                <div className="text-left min-w-0">
+                                    <div
+                                        className="font-semibold text-[11px] tracking-[0.12em] uppercase transition-colors duration-200 truncate"
+                                        style={{ color: isActive ? '#F5F5F5' : 'rgba(255, 255, 255, 0.4)' }}
+                                    >
+                                        {agent.name}
+                                    </div>
+                                    <div
+                                        className="text-[10px] font-medium tracking-wide mt-0.5 truncate"
+                                        style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
+                                    >
+                                        {agent.desc}
+                                    </div>
+                                </div>
+
+                                {/* Hover overlay */}
+                                <div
+                                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                                    style={{ background: `linear-gradient(135deg, rgba(${agent.accentRgb}, 0.03), transparent)` }}
+                                />
+                            </button>
+                        );
+                    })}
                 </nav>
 
-                {/* Footer */}
-                <div className="p-6 border-t border-white/5">
-                    <div className="flex items-center gap-3 opacity-30 hover:opacity-100 transition-opacity cursor-pointer">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest font-bold">System Operational</span>
+                {/* Sidebar Footer */}
+                <div className="p-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                    <div className="flex items-center gap-3 group cursor-default">
+                        <div
+                            className="w-2 h-2 rounded-full animate-pulse"
+                            style={{ background: '#03BFAE', boxShadow: '0 0 8px rgba(3, 191, 174, 0.4)' }}
+                        />
+                        <span className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#6B6B6B' }}>
+                            System Online
+                        </span>
                     </div>
                 </div>
             </aside>
 
-            {/* MAIN STAGE */}
-            <main className="flex-1 flex flex-col relative z-10">
+            {/* ─── MAIN STAGE ─── */}
+            <main className="flex-1 flex flex-col relative z-10" role="main">
 
-                {/* TOP BAR */}
-                <header className="h-24 flex items-center px-10 justify-between">
-                    <div>
-                        <h2 className={`text-3xl font-black tracking-tight text-white/90 drop-shadow-2xl flex items-center gap-4`}>
-                            <span className="opacity-50 text-2xl font-normal text-white/20">AGENT //</span>
+                {/* TOP HEADER BAR */}
+                <header
+                    className="h-20 flex items-center px-10 justify-between shrink-0"
+                    style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}
+                >
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm font-light tracking-[0.15em] uppercase" style={{ color: '#6B6B6B' }}>
+                            Agent //
+                        </span>
+                        <h2
+                            className="text-2xl font-bold tracking-tight"
+                            style={{ color: activeAgent.accentColor }}
+                        >
                             {activeAgent.name}
                         </h2>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="px-4 py-1.5 rounded-full bg-black/40 border border-white/5 text-[10px] text-white/40 tracking-widest font-mono">
-                            ID: {activeAgent.id}_V2.4
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="px-4 py-1.5 rounded-full text-[10px] tracking-[0.1em] font-mono"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                border: '1px solid rgba(255, 255, 255, 0.05)',
+                                color: '#6B6B6B',
+                            }}
+                        >
+                            {activeAgent.id}_V2.4
+                        </div>
+                        <div
+                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            style={{
+                                background: `rgba(${activeAgent.accentRgb}, 0.1)`,
+                                border: `1px solid rgba(${activeAgent.accentRgb}, 0.15)`,
+                            }}
+                        >
+                            <div
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{
+                                    background: activeAgent.accentColor,
+                                    boxShadow: `0 0 6px rgba(${activeAgent.accentRgb}, 0.5)`,
+                                }}
+                            />
                         </div>
                     </div>
                 </header>
 
                 {/* CONTENT AREA */}
-                <div className="flex-1 overflow-y-auto px-10 pb-10 flex gap-8">
+                <div className="flex-1 overflow-y-auto px-10 pb-10 pt-6 flex gap-8">
 
                     {/* INPUT COLUMN */}
                     <div className="flex-1 max-w-2xl flex flex-col gap-6 animate-slide-in-up">
-                        <div className="glass-panel rounded-3xl p-8 relative overflow-hidden group">
+                        <div
+                            className="glass-panel-elevated rounded-2xl p-8 relative overflow-hidden group"
+                        >
+                            {/* Shimmer overlay */}
+                            <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />
 
-                            {/* Subtle gradient background for card */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                            <div className="flex justify-between items-center mb-6">
-                                <label className="text-xs font-bold text-teal-400 tracking-[0.2em] uppercase glow-text flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                            {/* Label row */}
+                            <div className="flex justify-between items-center mb-5 relative z-10">
+                                <label
+                                    className="text-[11px] font-bold tracking-[0.2em] uppercase flex items-center gap-2.5"
+                                    style={{ color: '#03BFAE' }}
+                                    htmlFor="agent-input"
+                                >
+                                    <span
+                                        className="w-1.5 h-1.5 rounded-full"
+                                        style={{ background: '#03BFAE', boxShadow: '0 0 6px rgba(3, 191, 174, 0.5)' }}
+                                    />
                                     Input Protocol
                                 </label>
-                                <span className="text-[10px] text-white/20 font-mono">waiting_for_signal...</span>
+                                <span className="text-[10px] font-mono" style={{ color: '#6B6B6B' }}>
+                                    {loading ? 'processing...' : 'ready'}
+                                </span>
                             </div>
 
+                            {/* Textarea */}
                             <textarea
-                                className="w-full h-64 bg-black/30 rounded-xl p-6 text-base font-light leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-teal-500/50 focus:bg-black/50 transition-all resize-none placeholder:text-white/10"
-                                placeholder={activeAgent.id === 'DIRECTOR' ? "Describe the seed idea to initiate the Waterfall...\nEx: 'I want to talk about how we sabotage our own success.'" : "Enter payload for processing..."}
+                                id="agent-input"
+                                className="w-full h-60 rounded-xl p-5 text-sm font-light leading-relaxed resize-none transition-all duration-200 relative z-10"
+                                style={{
+                                    background: 'rgba(0, 0, 0, 0.3)',
+                                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                                    color: '#F5F5F5',
+                                    outline: 'none',
+                                }}
+                                onFocus={(e) => {
+                                    e.currentTarget.style.borderColor = 'rgba(3, 191, 174, 0.3)';
+                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(3, 191, 174, 0.05)';
+                                }}
+                                onBlur={(e) => {
+                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+                                    e.currentTarget.style.boxShadow = 'none';
+                                }}
+                                placeholder={
+                                    activeAgent.id === 'DIRECTOR'
+                                        ? "Describe the seed idea to initiate the Waterfall..."
+                                        : "Enter payload for processing..."
+                                }
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
+                                aria-label="Agent input text"
                             />
 
-                            <div className="flex justify-between items-center mt-6">
-                                <div className="text-[10px] text-white/20 uppercase tracking-widest">
-                                    {input.length > 0 ? `${input.length} chars` : 'Ready'}
+                            {/* Footer row */}
+                            <div className="flex justify-between items-center mt-5 relative z-10">
+                                <div className="text-[10px] uppercase tracking-[0.15em] font-medium" style={{ color: '#6B6B6B' }}>
+                                    {input.length > 0 ? `${input.length} chars` : 'Awaiting input'}
                                 </div>
                                 <button
                                     onClick={handleRun}
                                     disabled={loading || !input}
-                                    className={`
-                                    relative overflow-hidden group/btn bg-white text-black font-bold py-3 px-8 rounded-xl text-xs uppercase tracking-[0.15em] transition-all 
-                                    ${!input ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:scale-[1.02] shadow-[0_0_40px_rgba(255,255,255,0.3)]'}
-                                `}
+                                    className="btn-cta py-3 px-7 rounded-xl text-xs uppercase tracking-[0.12em] flex items-center gap-2"
+                                    aria-label={loading ? 'Processing request' : 'Initialize protocol'}
                                 >
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        {loading ? (
-                                            <>Processing <span className="animate-pulse">...</span></>
-                                        ) : (
-                                            <>Initialize Protocol <span className="text-lg">→</span></>
-                                        )}
-                                    </span>
+                                    {loading ? (
+                                        <>
+                                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Processing
+                                        </>
+                                    ) : (
+                                        <>
+                                            Run Protocol
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     {/* OUTPUT COLUMN */}
-                    <div className="flex-1 animate-slide-in-up delay-[100ms]">
+                    <div className="flex-1 animate-slide-in-up delay-100">
                         {output ? (
-                            <div className="glass-panel rounded-3xl p-1 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-b from-teal-500/5 to-transparent pointer-events-none" />
+                            <div className="relative rounded-2xl overflow-hidden animate-fade-in">
+                                {/* Gradient border effect */}
+                                <div
+                                    className="absolute inset-0 rounded-2xl pointer-events-none"
+                                    style={{
+                                        background: `linear-gradient(135deg, rgba(${activeAgent.accentRgb}, 0.15), rgba(3, 191, 174, 0.05))`,
+                                        padding: '1px',
+                                    }}
+                                />
 
-                                <div className="bg-[#0A0A0C]/90 backdrop-blur-3xl rounded-[20px] p-8 h-full min-h-[400px]">
-                                    <div className="flex justify-between items-start mb-8 border-b border-white/5 pb-4">
-                                        <label className="text-xs font-bold text-pink-400 tracking-[0.2em] uppercase flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse"></span>
-                                            Data Stream
+                                <div
+                                    className="relative rounded-2xl p-8 min-h-[400px]"
+                                    style={{
+                                        background: 'rgba(13, 17, 23, 0.9)',
+                                        backdropFilter: 'blur(32px)',
+                                        border: `1px solid rgba(${activeAgent.accentRgb}, 0.1)`,
+                                    }}
+                                >
+                                    {/* Output header */}
+                                    <div
+                                        className="flex justify-between items-center mb-6 pb-4"
+                                        style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}
+                                    >
+                                        <label className="text-[11px] font-bold tracking-[0.2em] uppercase flex items-center gap-2.5" style={{ color: '#FF64A6' }}>
+                                            <span
+                                                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                                                style={{ background: '#FF64A6', boxShadow: '0 0 6px rgba(255, 100, 166, 0.5)' }}
+                                            />
+                                            Output Stream
                                         </label>
-                                        <div className="flex gap-2">
-                                            <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white" title="Copy">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                            </button>
-                                        </div>
+                                        <button
+                                            className="p-2 rounded-lg transition-all duration-200"
+                                            style={{ color: '#6B6B6B' }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                                e.currentTarget.style.color = '#F5F5F5';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = 'transparent';
+                                                e.currentTarget.style.color = '#6B6B6B';
+                                            }}
+                                            aria-label="Copy output"
+                                            title="Copy to clipboard"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
                                     </div>
 
-                                    <div className="prose prose-invert prose-sm max-w-none prose-headings:font-light prose-headings:tracking-wide prose-p:text-white/70 prose-strong:text-teal-300">
-                                        <div className="whitespace-pre-wrap font-light leading-relaxed">
-                                            {output}
-                                        </div>
+                                    {/* Output content */}
+                                    <div className="whitespace-pre-wrap text-sm font-light leading-relaxed" style={{ color: 'rgba(245, 245, 245, 0.75)' }}>
+                                        {output}
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-full rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-white/10 p-12">
-                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                                    <span className="text-2xl opacity-20">⚡️</span>
+                            <div
+                                className="h-full rounded-2xl flex flex-col items-center justify-center p-12"
+                                style={{
+                                    border: '1px dashed rgba(255, 255, 255, 0.05)',
+                                    background: 'rgba(255, 255, 255, 0.01)',
+                                }}
+                            >
+                                <div
+                                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                                    style={{
+                                        background: 'rgba(255, 100, 166, 0.05)',
+                                        border: '1px solid rgba(255, 100, 166, 0.08)',
+                                    }}
+                                >
+                                    <svg className="w-6 h-6" style={{ color: 'rgba(255, 100, 166, 0.25)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
                                 </div>
-                                <p className="tracking-widest text-xs uppercase font-medium">Awaiting Output</p>
+                                <p className="tracking-[0.15em] text-[11px] uppercase font-medium" style={{ color: '#6B6B6B' }}>
+                                    Awaiting Output
+                                </p>
+                                <p className="text-[10px] mt-2 font-light" style={{ color: 'rgba(255, 255, 255, 0.1)' }}>
+                                    Select an agent and run a protocol
+                                </p>
                             </div>
                         )}
                     </div>

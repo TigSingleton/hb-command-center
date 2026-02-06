@@ -7,14 +7,25 @@ export default {
     theme: {
         extend: {
             colors: {
-                background: '#0F0F11',
-                surface: '#1A1A1E',
-                primary: '#5FB8A8', // Teal
-                secondary: '#FF64A6', // Pink
-                accent: '#E1E1E3', // Starlight
+                // HeartBased.ai Brand System
+                hb: {
+                    pink: '#FF64A6',
+                    'pink-hover': '#FF7AB5',
+                    'pink-dark': '#DE4083',
+                    teal: '#03BFAE',
+                    'teal-dark': '#009688',
+                    'bg-start': '#0D1117',
+                    'bg-end': '#1A1F24',
+                },
+                // Semantic aliases
+                background: '#0D1117',
+                surface: '#1A1F24',
+                primary: '#FF64A6',
+                secondary: '#03BFAE',
+                accent: '#E1E1E3',
             },
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
+                sans: ['Inter', 'system-ui', 'sans-serif'],
             },
         },
     },
