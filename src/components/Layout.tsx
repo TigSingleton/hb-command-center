@@ -135,12 +135,12 @@ export const Layout: React.FC = () => {
             />
 
             {/* ─── HEADER ROW: Logo + Status ─── */}
-            <div className="flex items-center justify-between mb-6 relative z-20 shrink-0">
-                <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black tracking-[0.15em] gradient-text-brand">
+            <div className="flex items-center justify-between mb-8 relative z-20 shrink-0">
+                <div className="flex items-baseline gap-3">
+                    <span className="text-3xl font-black tracking-[0.15em] gradient-text-brand">
                         HBHQ
                     </span>
-                    <span className="text-base font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+                    <span className="text-lg font-light tracking-[0.15em]" style={{ color: 'rgba(255, 255, 255, 0.55)' }}>
                         Command Center
                     </span>
                 </div>
