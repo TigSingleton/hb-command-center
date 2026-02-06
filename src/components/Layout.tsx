@@ -3,9 +3,8 @@ import { generateAgentResponse } from '../lib/ai';
 
 /* ─── Agent Icon Components ─── */
 
-const IconDirector: React.FC<{ color: string }> = ({ color }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Clapperboard / film director */}
+const IconDirector: React.FC<{ color: string; size?: number }> = ({ color, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 20h16a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z" />
         <path d="M3 10h18" />
         <path d="M7 6l2-4" />
@@ -14,27 +13,24 @@ const IconDirector: React.FC<{ color: string }> = ({ color }) => (
     </svg>
 );
 
-const IconAlchemist: React.FC<{ color: string }> = ({ color }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Flask / alchemy */}
+const IconAlchemist: React.FC<{ color: string; size?: number }> = ({ color, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 3h6" />
         <path d="M10 3v6.5L4 19a1 1 0 00.87 1.5h14.26A1 1 0 0020 19l-6-9.5V3" />
         <path d="M8.5 14h7" />
     </svg>
 );
 
-const IconMuse: React.FC<{ color: string }> = ({ color }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Music note / inspiration */}
+const IconMuse: React.FC<{ color: string; size?: number }> = ({ color, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 18V5l12-2v13" />
         <circle cx="6" cy="18" r="3" />
         <circle cx="18" cy="16" r="3" />
     </svg>
 );
 
-const IconProducer: React.FC<{ color: string }> = ({ color }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Sliders / mixing board */}
+const IconProducer: React.FC<{ color: string; size?: number }> = ({ color, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <line x1="4" y1="21" x2="4" y2="14" />
         <line x1="4" y1="10" x2="4" y2="3" />
         <line x1="12" y1="21" x2="12" y2="12" />
@@ -47,9 +43,8 @@ const IconProducer: React.FC<{ color: string }> = ({ color }) => (
     </svg>
 );
 
-const IconInterviewer: React.FC<{ color: string }> = ({ color }) => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Microphone / depth */}
+const IconInterviewer: React.FC<{ color: string; size?: number }> = ({ color, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
         <path d="M19 10v2a7 7 0 01-14 0v-2" />
         <line x1="12" y1="19" x2="12" y2="23" />
@@ -57,7 +52,7 @@ const IconInterviewer: React.FC<{ color: string }> = ({ color }) => (
     </svg>
 );
 
-const AGENT_ICONS: Record<string, React.FC<{ color: string }>> = {
+const AGENT_ICONS: Record<string, React.FC<{ color: string; size?: number }>> = {
     DIRECTOR: IconDirector,
     ALCHEMIST: IconAlchemist,
     MUSE: IconMuse,
@@ -71,6 +66,7 @@ const AGENTS = [
     {
         id: 'DIRECTOR',
         name: 'THE DIRECTOR',
+        shortName: 'Director',
         desc: 'Orchestration & Strategy',
         accentColor: '#818CF8',
         accentRgb: '129, 140, 248',
@@ -78,6 +74,7 @@ const AGENTS = [
     {
         id: 'ALCHEMIST',
         name: 'THE ALCHEMIST',
+        shortName: 'Alchemist',
         desc: 'Transmutation & Writing',
         accentColor: '#34D399',
         accentRgb: '52, 211, 153',
@@ -85,6 +82,7 @@ const AGENTS = [
     {
         id: 'MUSE',
         name: 'THE MUSE',
+        shortName: 'Muse',
         desc: 'Inspiration & Lyrics',
         accentColor: '#FF64A6',
         accentRgb: '255, 100, 166',
@@ -92,6 +90,7 @@ const AGENTS = [
     {
         id: 'PRODUCER',
         name: 'THE PRODUCER',
+        shortName: 'Producer',
         desc: 'Showrunner & Logistics',
         accentColor: '#FBBF24',
         accentRgb: '251, 191, 36',
@@ -99,6 +98,7 @@ const AGENTS = [
     {
         id: 'INTERVIEWER',
         name: 'THE INTERVIEWER',
+        shortName: 'Interviewer',
         desc: 'Extraction & Depth',
         accentColor: '#22D3EE',
         accentRgb: '34, 211, 238',
@@ -121,10 +121,8 @@ export const Layout: React.FC = () => {
         setLoading(false);
     };
 
-    const AgentIcon = AGENT_ICONS[activeAgent.id];
-
     return (
-        <div className="flex h-screen font-sans overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1117 0%, #1A1F24 100%)' }}>
+        <div className="flex flex-col h-screen font-sans overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1117 0%, #1A1F24 100%)' }}>
 
             {/* AMBIENT BACKGROUND GLOWS */}
             <div
@@ -136,169 +134,115 @@ export const Layout: React.FC = () => {
                 style={{ background: 'radial-gradient(circle, rgba(3, 191, 174, 0.04) 0%, transparent 70%)' }}
             />
 
-            {/* ─── SIDEBAR ─── */}
-            <aside
-                className="w-[280px] flex flex-col relative z-20 shrink-0"
-                style={{
-                    background: 'rgba(13, 17, 23, 0.8)',
-                    backdropFilter: 'blur(24px)',
-                    borderRight: '1px solid rgba(255, 255, 255, 0.04)',
-                }}
-                role="navigation"
-                aria-label="Agent Selection"
+            {/* ─── TOP BAR: Logo + Agent Toolbar ─── */}
+            <header
+                className="relative z-20 shrink-0 px-8 pt-6 pb-5"
+                style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}
             >
-                {/* Logo - generous top/left padding */}
-                <div className="px-7 pt-8 pb-6">
-                    <div className="flex items-baseline gap-1.5">
-                        <span className="text-[22px] font-black tracking-[0.15em] gradient-text-brand">
+                <div className="flex items-center justify-between">
+                    {/* Logo */}
+                    <div className="flex items-baseline gap-1.5 shrink-0">
+                        <span className="text-xl font-black tracking-[0.15em] gradient-text-brand">
                             HBHQ
                         </span>
-                        <span className="text-base font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+                        <span className="text-sm font-extralight tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.2)' }}>
                             CMD
                         </span>
                     </div>
-                    <div className="mt-1.5 text-[9px] font-medium tracking-[0.3em] uppercase" style={{ color: '#6B6B6B' }}>
-                        Command Center
-                    </div>
-                    <div
-                        className="mt-7 h-px w-full"
-                        style={{ background: 'linear-gradient(to right, rgba(255, 100, 166, 0.2), rgba(3, 191, 174, 0.2), transparent)' }}
-                    />
-                </div>
 
-                {/* Agent List - more spacing */}
-                <nav className="flex-1 px-5 space-y-2.5 overflow-y-auto py-3" aria-label="AI Agents">
-                    {AGENTS.map(agent => {
-                        const isActive = activeAgent.id === agent.id;
-                        const Icon = AGENT_ICONS[agent.id];
-                        return (
-                            <button
-                                key={agent.id}
-                                onClick={() => {
-                                    setActiveAgent(agent);
-                                    setOutput(null);
-                                }}
-                                className="w-full group relative flex items-center py-4 px-4 rounded-xl transition-all duration-200"
-                                style={{
-                                    background: isActive ? `rgba(${agent.accentRgb}, 0.08)` : 'transparent',
-                                    border: isActive ? `1px solid rgba(${agent.accentRgb}, 0.15)` : '1px solid transparent',
-                                }}
-                                aria-current={isActive ? 'page' : undefined}
-                                aria-label={`${agent.name} - ${agent.desc}`}
-                            >
-                                {/* Active indicator bar */}
-                                {isActive && (
-                                    <div
-                                        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full"
-                                        style={{ background: `linear-gradient(to bottom, transparent, ${agent.accentColor}, transparent)` }}
-                                    />
-                                )}
-
-                                {/* Agent icon */}
-                                <div
-                                    className="w-10 h-10 rounded-lg flex items-center justify-center mr-4 transition-all duration-200 shrink-0"
+                    {/* Agent Toolbar */}
+                    <nav className="flex items-center gap-2" role="tablist" aria-label="AI Agents">
+                        {AGENTS.map(agent => {
+                            const isActive = activeAgent.id === agent.id;
+                            const Icon = AGENT_ICONS[agent.id];
+                            return (
+                                <button
+                                    key={agent.id}
+                                    onClick={() => {
+                                        setActiveAgent(agent);
+                                        setOutput(null);
+                                    }}
+                                    role="tab"
+                                    aria-selected={isActive}
+                                    aria-label={`${agent.name} - ${agent.desc}`}
+                                    className="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-200"
                                     style={{
-                                        background: isActive ? `rgba(${agent.accentRgb}, 0.12)` : 'rgba(255, 255, 255, 0.03)',
-                                        border: `1px solid ${isActive ? `rgba(${agent.accentRgb}, 0.2)` : 'rgba(255, 255, 255, 0.04)'}`,
+                                        background: isActive ? `rgba(${agent.accentRgb}, 0.1)` : 'transparent',
+                                        border: isActive ? `1px solid rgba(${agent.accentRgb}, 0.2)` : '1px solid transparent',
                                     }}
                                 >
-                                    <Icon color={isActive ? agent.accentColor : 'rgba(255, 255, 255, 0.2)'} />
-                                </div>
-
-                                <div className="text-left min-w-0">
+                                    {/* Icon */}
                                     <div
-                                        className="font-semibold text-[11px] tracking-[0.12em] uppercase transition-colors duration-200 truncate"
-                                        style={{ color: isActive ? '#F5F5F5' : 'rgba(255, 255, 255, 0.4)' }}
+                                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200"
+                                        style={{
+                                            background: isActive ? `rgba(${agent.accentRgb}, 0.15)` : 'rgba(255, 255, 255, 0.03)',
+                                            border: `1px solid ${isActive ? `rgba(${agent.accentRgb}, 0.25)` : 'rgba(255, 255, 255, 0.04)'}`,
+                                        }}
                                     >
-                                        {agent.name}
+                                        <Icon color={isActive ? agent.accentColor : 'rgba(255, 255, 255, 0.2)'} size={15} />
                                     </div>
+
+                                    {/* Name + Desc */}
+                                    <div className="text-left hidden lg:block">
+                                        <div
+                                            className="text-[11px] font-semibold tracking-[0.08em] uppercase transition-colors duration-200"
+                                            style={{ color: isActive ? '#F5F5F5' : 'rgba(255, 255, 255, 0.35)' }}
+                                        >
+                                            {agent.shortName}
+                                        </div>
+                                        <div
+                                            className="text-[9px] font-medium tracking-wide mt-0.5"
+                                            style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.6)` : 'rgba(255, 255, 255, 0.12)' }}
+                                        >
+                                            {agent.desc}
+                                        </div>
+                                    </div>
+
+                                    {/* Active bottom indicator */}
+                                    {isActive && (
+                                        <div
+                                            className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full"
+                                            style={{ background: `linear-gradient(to right, transparent, ${agent.accentColor}, transparent)` }}
+                                        />
+                                    )}
+
+                                    {/* Hover overlay */}
                                     <div
-                                        className="text-[10px] font-medium tracking-wide mt-1 truncate"
-                                        style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
-                                    >
-                                        {agent.desc}
-                                    </div>
-                                </div>
+                                        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                                        style={{ background: `linear-gradient(135deg, rgba(${agent.accentRgb}, 0.04), transparent)` }}
+                                    />
+                                </button>
+                            );
+                        })}
+                    </nav>
 
-                                {/* Hover overlay */}
-                                <div
-                                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                                    style={{ background: `linear-gradient(135deg, rgba(${agent.accentRgb}, 0.04), transparent)` }}
-                                />
-                            </button>
-                        );
-                    })}
-                </nav>
-
-                {/* Sidebar Footer */}
-                <div className="px-7 py-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <div className="flex items-center gap-3 cursor-default">
+                    {/* Status */}
+                    <div className="flex items-center gap-3 shrink-0">
                         <div
                             className="w-2 h-2 rounded-full animate-pulse"
                             style={{ background: '#03BFAE', boxShadow: '0 0 8px rgba(3, 191, 174, 0.4)' }}
                         />
-                        <span className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#6B6B6B' }}>
-                            System Online
+                        <span className="text-[10px] uppercase tracking-[0.12em] font-medium" style={{ color: '#6B6B6B' }}>
+                            Online
                         </span>
                     </div>
                 </div>
-            </aside>
+            </header>
 
-            {/* ─── MAIN STAGE ─── */}
-            <main className="flex-1 flex flex-col relative z-10 min-w-0" role="main">
+            {/* ─── MAIN CONTENT: Input + Output ─── */}
+            <main className="flex-1 flex flex-col min-h-0 relative z-10" role="main">
 
-                {/* TOP HEADER BAR - more padding */}
-                <header
-                    className="h-[72px] flex items-center px-12 justify-between shrink-0"
-                    style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}
-                >
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-light tracking-[0.2em] uppercase" style={{ color: '#6B6B6B' }}>
-                            Agent //
-                        </span>
-                        <h2
-                            className="text-xl font-bold tracking-tight"
-                            style={{ color: activeAgent.accentColor }}
-                        >
-                            {activeAgent.name}
-                        </h2>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="px-4 py-1.5 rounded-full text-[10px] tracking-[0.1em] font-mono"
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.03)',
-                                border: '1px solid rgba(255, 255, 255, 0.05)',
-                                color: '#6B6B6B',
-                            }}
-                        >
-                            {activeAgent.id}_V2.4
-                        </div>
-                        <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{
-                                background: `rgba(${activeAgent.accentRgb}, 0.1)`,
-                                border: `1px solid rgba(${activeAgent.accentRgb}, 0.15)`,
-                            }}
-                        >
-                            <AgentIcon color={activeAgent.accentColor} />
-                        </div>
-                    </div>
-                </header>
+                {/* Content Area - full width, two columns */}
+                <div className="flex-1 overflow-y-auto px-8 pb-8 pt-6 flex gap-8">
 
-                {/* CONTENT AREA - more padding, adjusted columns */}
-                <div className="flex-1 overflow-y-auto px-12 pb-10 pt-8 flex gap-10">
-
-                    {/* INPUT COLUMN - narrower (roughly 38% of content) */}
-                    <div className="w-[38%] shrink-0 flex flex-col gap-6 animate-slide-in-up">
-                        <div
-                            className="glass-panel-elevated rounded-2xl p-8 relative overflow-hidden group"
-                        >
+                    {/* INPUT COLUMN - 40% */}
+                    <div className="w-[40%] shrink-0 flex flex-col gap-5 animate-slide-in-up">
+                        <div className="glass-panel-elevated rounded-2xl p-7 relative overflow-hidden group flex flex-col flex-1">
                             {/* Shimmer overlay */}
                             <div className="absolute inset-0 animate-shimmer pointer-events-none rounded-2xl" />
 
                             {/* Label row */}
-                            <div className="flex justify-between items-center mb-6 relative z-10">
+                            <div className="flex justify-between items-center mb-5 relative z-10">
                                 <label
                                     className="text-[11px] font-bold tracking-[0.2em] uppercase flex items-center gap-2.5"
                                     style={{ color: '#03BFAE' }}
@@ -315,10 +259,10 @@ export const Layout: React.FC = () => {
                                 </span>
                             </div>
 
-                            {/* Textarea */}
+                            {/* Textarea - grows to fill */}
                             <textarea
                                 id="agent-input"
-                                className="w-full h-56 rounded-xl p-5 text-sm font-light leading-relaxed resize-none transition-all duration-200 relative z-10"
+                                className="w-full flex-1 min-h-[180px] rounded-xl p-5 text-sm font-light leading-relaxed resize-none transition-all duration-200 relative z-10"
                                 style={{
                                     background: 'rgba(0, 0, 0, 0.3)',
                                     border: '1px solid rgba(255, 255, 255, 0.04)',
@@ -344,7 +288,7 @@ export const Layout: React.FC = () => {
                             />
 
                             {/* Footer row */}
-                            <div className="flex justify-between items-center mt-6 relative z-10">
+                            <div className="flex justify-between items-center mt-5 relative z-10">
                                 <div className="text-[10px] uppercase tracking-[0.15em] font-medium" style={{ color: '#6B6B6B' }}>
                                     {input.length > 0 ? `${input.length} chars` : 'Awaiting input'}
                                 </div>
@@ -372,21 +316,12 @@ export const Layout: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* OUTPUT COLUMN - takes remaining ~62% */}
+                    {/* OUTPUT COLUMN - 60% */}
                     <div className="flex-1 min-w-0 animate-slide-in-up delay-100">
                         {output ? (
-                            <div className="relative rounded-2xl overflow-hidden animate-fade-in">
-                                {/* Gradient border effect */}
+                            <div className="relative rounded-2xl overflow-hidden animate-fade-in h-full">
                                 <div
-                                    className="absolute inset-0 rounded-2xl pointer-events-none"
-                                    style={{
-                                        background: `linear-gradient(135deg, rgba(${activeAgent.accentRgb}, 0.15), rgba(3, 191, 174, 0.05))`,
-                                        padding: '1px',
-                                    }}
-                                />
-
-                                <div
-                                    className="relative rounded-2xl p-8 min-h-[400px]"
+                                    className="relative rounded-2xl p-8 h-full"
                                     style={{
                                         background: 'rgba(13, 17, 23, 0.9)',
                                         backdropFilter: 'blur(32px)',
@@ -426,7 +361,7 @@ export const Layout: React.FC = () => {
                                     </div>
 
                                     {/* Output content */}
-                                    <div className="whitespace-pre-wrap text-sm font-light leading-relaxed" style={{ color: 'rgba(245, 245, 245, 0.75)' }}>
+                                    <div className="whitespace-pre-wrap text-sm font-light leading-relaxed overflow-y-auto" style={{ color: 'rgba(245, 245, 245, 0.75)' }}>
                                         {output}
                                     </div>
                                 </div>
