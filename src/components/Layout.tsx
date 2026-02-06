@@ -135,12 +135,12 @@ export const Layout: React.FC = () => {
             />
 
             {/* ─── HEADER ROW: Logo + Status ─── */}
-            <div className="flex items-center justify-between mb-8 relative z-20 shrink-0">
-                <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-black tracking-[0.15em] gradient-text-brand">
+            <div className="flex items-center justify-between relative z-20 shrink-0" style={{ marginBottom: '28px' }}>
+                <div className="flex items-baseline gap-4">
+                    <span style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '0.12em' }} className="gradient-text-brand">
                         HBHQ
                     </span>
-                    <span className="text-lg font-light tracking-[0.15em]" style={{ color: 'rgba(255, 255, 255, 0.55)' }}>
+                    <span style={{ fontSize: '20px', fontWeight: 300, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
                         Command Center
                     </span>
                 </div>
@@ -157,7 +157,7 @@ export const Layout: React.FC = () => {
 
             {/* ─── AGENT TOOLBAR ─── */}
             <nav
-                className="flex items-center gap-3 mb-8 relative z-20 shrink-0"
+                className="flex items-center gap-3 relative z-20 shrink-0" style={{ marginBottom: '28px' }}
                 role="tablist"
                 aria-label="AI Agents"
             >
@@ -174,9 +174,10 @@ export const Layout: React.FC = () => {
                             role="tab"
                             aria-selected={isActive}
                             aria-label={`${agent.name} - ${agent.desc}`}
-                            className="group relative flex items-center gap-3 rounded-xl transition-all duration-200"
+                            className="group relative flex items-center rounded-xl transition-all duration-200"
                             style={{
                                 padding: '12px 20px',
+                                gap: '14px',
                                 background: isActive ? `rgba(${agent.accentRgb}, 0.1)` : 'rgba(255, 255, 255, 0.02)',
                                 border: isActive ? `1px solid rgba(${agent.accentRgb}, 0.2)` : '1px solid rgba(255, 255, 255, 0.04)',
                             }}
@@ -195,13 +196,13 @@ export const Layout: React.FC = () => {
                             {/* Name + Desc - ALWAYS visible */}
                             <div className="text-left">
                                 <div
-                                    className="text-[12px] font-semibold tracking-[0.05em] transition-colors duration-200"
-                                    style={{ color: isActive ? '#F5F5F5' : 'rgba(255, 255, 255, 0.4)' }}
+                                    className="font-semibold tracking-[0.04em] transition-colors duration-200"
+                                    style={{ fontSize: '13px', color: isActive ? '#F5F5F5' : 'rgba(255, 255, 255, 0.4)' }}
                                 >
                                     {agent.name}
                                 </div>
                                 <div
-                                    className="text-[10px] font-medium tracking-wide mt-0.5"
+                                    className="font-medium tracking-wide" style={{ fontSize: '10px', marginTop: '3px' }}
                                     style={{ color: isActive ? `rgba(${agent.accentRgb}, 0.7)` : 'rgba(255, 255, 255, 0.15)' }}
                                 >
                                     {agent.desc}
