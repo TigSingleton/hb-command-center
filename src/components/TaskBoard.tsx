@@ -46,6 +46,9 @@ export function TaskBoard({ tasks, agents, projects, onUpdateTaskStatus, onUpdat
     return true;
   });
 
+  const getSubTaskCount = (taskId: string) => tasks.filter(t => t.parentTaskId === taskId).length;
+  const getParentTask = (task: Task) => task.parentTaskId ? tasks.find(t => t.id === task.parentTaskId) : null;
+
   const projectsWithTasks = projects.filter(p =>
     tasks.some(t => t.projectId === p.id)
   );
@@ -400,14 +403,27 @@ export function TaskBoard({ tasks, agents, projects, onUpdateTaskStatus, onUpdat
                     )}
                     onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
                   >
-                    {/* Project badge */}
-                    {task.projectShortCode && (
-                      <div className="mb-1.5">
+                    {/* Project badge + sub-task indicators */}
+                    <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                      {task.projectShortCode && (
                         <span className="text-[9px] font-mono px-1.5 py-0.5 bg-amber-500/10 text-amber-400/70">
                           {task.projectShortCode}
                         </span>
-                      </div>
-                    )}
+                      )}
+                      {task.parentTaskId && (() => {
+                        const parent = getParentTask(task);
+                        return parent ? (
+                          <span className="text-[9px] px-1.5 py-0.5 bg-zinc-800 text-zinc-500" title={`Sub-task of: ${parent.title}`}>
+                            ↳ {parent.title.substring(0, 25)}{parent.title.length > 25 ? '...' : ''}
+                          </span>
+                        ) : null;
+                      })()}
+                      {getSubTaskCount(task.id) > 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400/70">
+                          {getSubTaskCount(task.id)} sub-task{getSubTaskCount(task.id) > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-start gap-2 mb-1.5">
                       <span className={cn(
@@ -527,6 +543,23 @@ export function TaskBoard({ tasks, agents, projects, onUpdateTaskStatus, onUpdat
                             <option value="">No project</option>
                             {projects.map(p => (
                               <option key={p.id} value={p.id}>{p.shortCode} — {p.title.replace(/^PR\.\w+\s*\|\s*/, '')}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Parent task selector (sub-task support) */}
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1">Parent Task</div>
+                          <select
+                            value={task.parentTaskId || ''}
+                            onChange={(e) => {
+                              if (onUpdateTask) onUpdateTask(task.id, { parentTaskId: e.target.value || undefined } as any);
+                            }}
+                            className="bg-zinc-800 border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 focus:outline-none"
+                          >
+                            <option value="">None (top-level task)</option>
+                            {tasks.filter(t => t.id !== task.id && !t.parentTaskId).map(t => (
+                              <option key={t.id} value={t.id}>{t.title.substring(0, 50)}</option>
                             ))}
                           </select>
                         </div>

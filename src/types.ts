@@ -25,6 +25,7 @@ export interface Project {
   completedTaskCount: number;
   notes?: string;
   createdAt: string;
+  parentProjectId?: string;
 }
 
 export interface Department {
@@ -46,6 +47,7 @@ export interface Task {
   projectId?: string;
   projectName?: string;
   projectShortCode?: string;
+  parentTaskId?: string;
 }
 
 export interface Message {
@@ -79,6 +81,7 @@ export interface ActivityItem {
 export interface Goal {
   id: string;
   title: string;
+  description?: string;
   progress: number;
   status: 'on-track' | 'at-risk' | 'ahead' | 'behind';
   ownerAgentId?: string;

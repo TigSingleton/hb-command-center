@@ -119,14 +119,27 @@ export async function deleteTask(taskId: string) {
   });
 }
 
-export async function updateGoal(goalId: string, updates: { progress?: number; status?: string }) {
+export async function updateGoal(goalId: string, updates: { progress?: number; status?: string; title?: string; description?: string; target_date?: string; owner_agent_id?: string; initiatives?: any[] }) {
   return apiFetch(`${CEA_API}?action=update-goal`, {
     method: 'POST',
     body: JSON.stringify({
       goal_id: goalId,
-      progress: updates.progress,
-      status: updates.status,
+      ...updates,
     }),
+  });
+}
+
+export async function createGoal(title: string, description?: string, ownerAgentId?: string, targetDate?: string, quarter?: string) {
+  return apiFetch(`${CEA_API}?action=create-goal`, {
+    method: 'POST',
+    body: JSON.stringify({ title, description, owner_agent_id: ownerAgentId, target_date: targetDate, quarter }),
+  });
+}
+
+export async function deleteGoal(goalId: string) {
+  return apiFetch(`${CEA_API}?action=delete-goal`, {
+    method: 'POST',
+    body: JSON.stringify({ goal_id: goalId }),
   });
 }
 

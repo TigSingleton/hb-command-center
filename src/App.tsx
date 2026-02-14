@@ -11,6 +11,7 @@ import { ChatInterface } from './components/ChatInterface';
 import { Strategy } from './components/Strategy';
 import { ProjectDetail } from './components/ProjectDetail';
 import { IdeaCaptureModal, IdeaFAB } from './components/IdeaCaptureModal';
+import { TaskCaptureModal, TaskFAB } from './components/TaskCaptureModal';
 import { IdeasView } from './components/IdeasView';
 import * as api from './api';
 
@@ -57,6 +58,7 @@ function mapTask(t: any, agents: any[], projects: any[]): Task {
     projectId: t.project_id || undefined,
     projectName: project ? project.title.replace(/^PR\.\w+\s*\|\s*/, '') : undefined,
     projectShortCode: shortCode || undefined,
+    parentTaskId: t.parent_task_id || undefined,
   };
 }
 
@@ -80,6 +82,7 @@ function mapProject(p: any, departments: any[], tasks: any[]): Project {
     completedTaskCount: completedTasks.length,
     notes: p.metadata?.notes || undefined,
     createdAt: p.created_at,
+    parentProjectId: p.parent_project_id || undefined,
   };
 }
 
@@ -93,6 +96,7 @@ function mapGoal(g: any, agents: any[]): Goal {
   return {
     id: g.id,
     title: g.title,
+    description: g.description || undefined,
     progress: g.progress || 0,
     status: g.status || 'on-track',
     ownerAgentId: g.owner_agent_id,
@@ -152,13 +156,18 @@ function App() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
   const [ideaModalOpen, setIdeaModalOpen] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
 
-  // Cmd+I shortcut for idea capture
+  // Cmd+I (idea) and Cmd+T (task) shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
         e.preventDefault();
         setIdeaModalOpen(prev => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+        e.preventDefault();
+        setTaskModalOpen(prev => !prev);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -488,7 +497,7 @@ function App() {
     }
   }, [isLive, projects]);
 
-  // Update goal
+  // Update goal (expanded: supports title, description, target_date too)
   const handleUpdateGoal = useCallback(async (goalId: string, updates: Partial<Goal>) => {
     setGoals(prev => prev.map(g => g.id === goalId ? { ...g, ...updates } : g));
 
@@ -497,6 +506,9 @@ function App() {
         await api.updateGoal(goalId, {
           progress: updates.progress,
           status: updates.status,
+          title: updates.title,
+          description: (updates as any).description,
+          target_date: updates.targetDate,
         });
       } catch (e) { console.error('Goal update error:', e); }
     }
@@ -506,10 +518,70 @@ function App() {
       const changes: string[] = [];
       if (updates.progress !== undefined) changes.push(`progress → ${updates.progress}%`);
       if (updates.status) changes.push(`status → ${updates.status}`);
+      if (updates.title) changes.push('title');
+      if ((updates as any).description !== undefined) changes.push('description');
+      if (updates.targetDate !== undefined) changes.push('target date');
 
       setActivity(prev => [{
         id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
-        action: 'Updated goal', detail: `${goal.title}: ${changes.join(', ')}`,
+        action: 'Updated goal', detail: `${updates.title || goal.title}: ${changes.join(', ')}`,
+        timestamp: 'Just now', type: 'task',
+      }, ...prev]);
+    }
+  }, [isLive, goals]);
+
+  // Create goal
+  const handleCreateGoal = useCallback(async (data: { title: string; description?: string; ownerAgentId?: string; targetDate?: string }) => {
+    const ownerAgent = data.ownerAgentId ? agents.find(a => a.id === data.ownerAgentId) : null;
+    const emojiMap: Record<string, string> = {
+      '@CEA': '🧠', '@Chief_of_Staff': '📋', '@Editor_in_Chief': '✍️',
+      '@Growth_Lead': '📈', '@VP_of_Engineering': '⚙️',
+    };
+
+    const tempGoal: Goal = {
+      id: `temp-${Date.now()}`,
+      title: data.title,
+      progress: 0,
+      status: 'on-track',
+      ownerAgentId: data.ownerAgentId,
+      ownerName: ownerAgent?.name || 'Unassigned',
+      ownerEmoji: ownerAgent ? (emojiMap[ownerAgent.role] || '🤖') : '🎯',
+      targetDate: data.targetDate,
+      initiatives: [],
+    };
+    setGoals(prev => [...prev, tempGoal]);
+
+    if (isLive) {
+      try {
+        const result = await api.createGoal(data.title, data.description, data.ownerAgentId, data.targetDate, 'Q1-2026');
+        if (result?.data?.[0]) {
+          setGoals(prev => prev.map(g => g.id === tempGoal.id ? { ...tempGoal, id: result.data[0].id } : g));
+        }
+      } catch (e) { console.error('Create goal error:', e); }
+    }
+
+    setActivity(prev => [{
+      id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
+      action: 'Created goal', detail: data.title,
+      timestamp: 'Just now', type: 'task',
+    }, ...prev]);
+  }, [isLive, agents]);
+
+  // Delete goal
+  const handleDeleteGoal = useCallback(async (goalId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    setGoals(prev => prev.filter(g => g.id !== goalId));
+
+    if (isLive) {
+      try {
+        await api.deleteGoal(goalId);
+      } catch (e) { console.error('Delete goal error:', e); }
+    }
+
+    if (goal) {
+      setActivity(prev => [{
+        id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
+        action: 'Deleted goal', detail: goal.title,
         timestamp: 'Just now', type: 'task',
       }, ...prev]);
     }
@@ -671,8 +743,18 @@ function App() {
         <ChatInterface messages={messages} onSendMessage={handleSendMessage} />
       )}
       {currentView === 'strategy' && (
-        <Strategy kpis={kpis} agents={agents} goals={goals} onUpdateGoal={handleUpdateGoal} />
+        <Strategy kpis={kpis} agents={agents} goals={goals} onUpdateGoal={handleUpdateGoal} onCreateGoal={handleCreateGoal} onDeleteGoal={handleDeleteGoal} />
       )}
+
+      {/* Quick Task FAB + Modal */}
+      <TaskFAB onClick={() => setTaskModalOpen(true)} taskCount={pendingTaskCount} />
+      <TaskCaptureModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        onSubmit={handleCreateTask}
+        agents={agents}
+        projects={projects}
+      />
 
       {/* Idea Capture FAB + Modal */}
       <IdeaFAB onClick={() => setIdeaModalOpen(true)} ideaCount={newIdeaCount} />
