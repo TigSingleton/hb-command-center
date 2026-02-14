@@ -408,7 +408,7 @@ function App() {
   }, [isLive, tasks]);
 
   // Create task
-  const handleCreateTask = useCallback(async (taskData: { title: string; description: string; priority: Task['priority']; assignedTo: string; projectId?: string }) => {
+  const handleCreateTask = useCallback(async (taskData: { title: string; description: string; priority: Task['priority']; assignedTo: string; projectId?: string; parentTaskId?: string }) => {
     const priorityMap: Record<string, number> = { critical: 1, high: 2, medium: 3, low: 4 };
     const project = projects.find(p => p.id === taskData.projectId);
 
@@ -426,12 +426,13 @@ function App() {
       projectId: taskData.projectId,
       projectName: project ? project.title.replace(/^PR\.\w+\s*\|\s*/, '') : undefined,
       projectShortCode: project?.shortCode,
+      parentTaskId: taskData.parentTaskId,
     };
     setTasks(prev => [tempTask, ...prev]);
 
     if (isLive) {
       try {
-        const result = await api.createTask(taskData.description, priorityMap[taskData.priority] || 3, taskData.assignedTo === 'tiger' ? undefined : taskData.assignedTo, taskData.projectId);
+        const result = await api.createTask(taskData.description, priorityMap[taskData.priority] || 3, taskData.assignedTo === 'tiger' ? undefined : taskData.assignedTo, taskData.projectId, taskData.parentTaskId);
         // Replace temp task with real one
         if (result.data?.[0]) {
           setTasks(prev => prev.map(t => t.id === tempTask.id ? { ...tempTask, id: result.data[0].id } : t));

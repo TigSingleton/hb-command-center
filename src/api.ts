@@ -58,10 +58,10 @@ export async function updateTaskStatus(taskId: string, status: string) {
   });
 }
 
-export async function createTask(description: string, priority: number, assignedTo?: string, projectId?: string) {
+export async function createTask(description: string, priority: number, assignedTo?: string, projectId?: string, parentTaskId?: string) {
   return apiFetch(`${CEA_API}?action=create-task`, {
     method: 'POST',
-    body: JSON.stringify({ description, priority, assigned_to: assignedTo, project_id: projectId }),
+    body: JSON.stringify({ description, priority, assigned_to: assignedTo, project_id: projectId, parent_task_id: parentTaskId }),
   });
 }
 

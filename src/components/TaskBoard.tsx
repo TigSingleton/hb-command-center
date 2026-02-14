@@ -8,7 +8,7 @@ interface TaskBoardProps {
   projects: Project[];
   onUpdateTaskStatus: (taskId: string, status: Task['status']) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
-  onCreateTask?: (task: { title: string; description: string; priority: Task['priority']; assignedTo: string; projectId?: string }) => void;
+  onCreateTask?: (task: { title: string; description: string; priority: Task['priority']; assignedTo: string; projectId?: string; parentTaskId?: string }) => void;
   onDeleteTask?: (taskId: string) => void;
 }
 
@@ -22,6 +22,7 @@ export function TaskBoard({ tasks, agents, projects, onUpdateTaskStatus, onUpdat
   const [editValue, setEditValue] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [subTaskInput, setSubTaskInput] = useState<{ parentId: string; title: string } | null>(null);
 
   // Drag and drop state
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -547,21 +548,92 @@ export function TaskBoard({ tasks, agents, projects, onUpdateTaskStatus, onUpdat
                           </select>
                         </div>
 
-                        {/* Parent task selector (sub-task support) */}
+                        {/* Sub-tasks */}
                         <div>
-                          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1">Parent Task</div>
-                          <select
-                            value={task.parentTaskId || ''}
-                            onChange={(e) => {
-                              if (onUpdateTask) onUpdateTask(task.id, { parentTaskId: e.target.value || undefined } as any);
-                            }}
-                            className="bg-zinc-800 border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 focus:outline-none"
-                          >
-                            <option value="">None (top-level task)</option>
-                            {tasks.filter(t => t.id !== task.id && !t.parentTaskId).map(t => (
-                              <option key={t.id} value={t.id}>{t.title.substring(0, 50)}</option>
-                            ))}
-                          </select>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1.5">
+                            Sub-tasks {getSubTaskCount(task.id) > 0 && <span className="text-zinc-500">({getSubTaskCount(task.id)})</span>}
+                          </div>
+                          {/* List existing sub-tasks */}
+                          {tasks.filter(t => t.parentTaskId === task.id).map(sub => (
+                            <div key={sub.id} className="flex items-center gap-2 py-1.5 pl-2 border-l-2 border-zinc-800 mb-1 group/sub hover:border-zinc-600 transition-colors">
+                              <button
+                                onClick={() => {
+                                  if (sub.status === 'completed') {
+                                    onUpdateTaskStatus(sub.id, 'pending');
+                                  } else {
+                                    onUpdateTaskStatus(sub.id, 'completed');
+                                  }
+                                }}
+                                className={cn(
+                                  'w-3.5 h-3.5 border shrink-0 flex items-center justify-center transition-all',
+                                  sub.status === 'completed'
+                                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                    : 'border-zinc-600 hover:border-zinc-500'
+                                )}
+                              >
+                                {sub.status === 'completed' && <span className="text-[8px]">&#10003;</span>}
+                              </button>
+                              <span
+                                className={cn(
+                                  'text-[11px] flex-1 cursor-pointer',
+                                  sub.status === 'completed' ? 'text-zinc-600 line-through' : 'text-zinc-400 hover:text-zinc-300'
+                                )}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedTask(sub.id);
+                                }}
+                              >
+                                {sub.title}
+                              </span>
+                              <span className={cn(
+                                'w-1.5 h-1.5 rounded-full shrink-0',
+                                sub.priority === 'critical' && 'bg-red-400',
+                                sub.priority === 'high' && 'bg-amber-400',
+                                sub.priority === 'medium' && 'bg-blue-400',
+                                sub.priority === 'low' && 'bg-zinc-500',
+                              )} />
+                            </div>
+                          ))}
+                          {/* Add sub-task input */}
+                          {subTaskInput?.parentId === task.id ? (
+                            <div className="flex items-center gap-2 mt-1">
+                              <input
+                                type="text"
+                                value={subTaskInput.title}
+                                onChange={(e) => setSubTaskInput({ parentId: task.id, title: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && subTaskInput.title.trim() && onCreateTask) {
+                                    onCreateTask({
+                                      title: subTaskInput.title.trim(),
+                                      description: subTaskInput.title.trim(),
+                                      priority: task.priority,
+                                      assignedTo: task.assignedTo,
+                                      projectId: task.projectId,
+                                      parentTaskId: task.id,
+                                    });
+                                    setSubTaskInput({ parentId: task.id, title: '' });
+                                  }
+                                  if (e.key === 'Escape') setSubTaskInput(null);
+                                }}
+                                placeholder="Sub-task title... (Enter to add)"
+                                className="flex-1 bg-zinc-800 border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => setSubTaskInput(null)}
+                                className="text-[9px] text-zinc-600 hover:text-zinc-400"
+                              >
+                                Done
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setSubTaskInput({ parentId: task.id, title: '' })}
+                              className="text-[10px] text-zinc-600 hover:text-amber-400 transition-colors mt-1 flex items-center gap-1"
+                            >
+                              <span className="text-xs leading-none">+</span> Add sub-task
+                            </button>
+                          )}
                         </div>
 
                         {/* Info row */}
