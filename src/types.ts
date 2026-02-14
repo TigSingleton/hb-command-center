@@ -88,4 +88,16 @@ export interface Goal {
   initiatives: { name: string; status: string; due: string }[];
 }
 
-export type ViewType = 'dashboard' | 'agents' | 'tasks' | 'projects' | 'project-detail' | 'chat' | 'strategy';
+export interface FeatureRequest {
+  id: string;
+  title: string;
+  description?: string;
+  screenshotUrl?: string;
+  sourceView?: string;
+  status: 'new' | 'acknowledged' | 'in_progress' | 'done' | 'dismissed';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ViewType = 'dashboard' | 'agents' | 'agent-detail' | 'tasks' | 'projects' | 'project-detail' | 'chat' | 'strategy' | 'ideas';

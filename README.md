@@ -19,7 +19,7 @@ pnpm install
 npx vite build
 
 # 4. Bundle into single HTML file
-node bundle.cjs
+node scripts/inline-build.mjs cea-dashboard.html
 
 # 5. Output: cea-dashboard.html (in this folder)
 ```
@@ -42,15 +42,20 @@ CEA Command Center/
 │   └── components/
 │       ├── Sidebar.tsx       # Left nav — view switching
 │       ├── Dashboard.tsx     # Home view — KPIs, activity feed, agent status
-│       ├── AgentHub.tsx      # Agent management — spawn, view, status
-│       ├── TaskBoard.tsx     # Kanban board — drag-and-drop task management
-│       ├── ProjectsView.tsx  # Project list/cards — filtering, sorting
-│       ├── ProjectDetail.tsx # Single project dashboard — tasks, editing
-│       ├── ChatInterface.tsx # Chat with The CEA (Claude Sonnet 4.5)
-│       ├── Strategy.tsx      # Goals & strategy — progress tracking
-│       └── ui/              # shadcn/ui primitives (button, card, dialog, etc.)
+│       ├── AgentHub.tsx         # Agent management — spawn, view, status
+│       ├── AgentDetail.tsx      # Agent profile — edit prompt, tools, identity
+│       ├── TaskBoard.tsx        # Kanban board — drag-and-drop task management
+│       ├── ProjectsView.tsx     # Project list/cards — filtering, sorting
+│       ├── ProjectDetail.tsx    # Single project dashboard — tasks, editing
+│       ├── ChatInterface.tsx    # Chat with The CEA (Claude Sonnet 4.5)
+│       ├── Strategy.tsx         # Goals & strategy — progress tracking
+│       ├── IdeasView.tsx        # Feature requests — status/priority management
+│       ├── IdeaCaptureModal.tsx # Quick idea capture modal + floating button
+│       └── ui/                 # shadcn/ui primitives (button, card, dialog, etc.)
+├── scripts/
+│   └── inline-build.mjs     # ESM post-build script — inlines JS/CSS into HTML
 ├── vite.config.ts           # Build config — IIFE format, inline imports
-├── bundle.cjs               # Post-build script — inlines JS/CSS into one HTML
+├── bundle.cjs               # CJS post-build script — alternative bundler
 ├── tailwind.config.js       # Tailwind theme config
 ├── cea-dashboard.html       # THE OUTPUT — single bundled file to open in browser
 ├── package.json
@@ -79,8 +84,8 @@ Browser (file://) → App.tsx → api.ts → Supabase Edge Functions → Postgre
 ### API Client (`src/api.ts`)
 All API calls go through `apiFetch()` which hits `https://gusdhnpsjmpueevnivsi.supabase.co/functions/v1/cea-api` with an `?action=` query parameter. No auth tokens are required (edge functions are public). Actions include:
 
-**Read**: `dashboard`, `agents`, `tasks`, `messages`, `kpis`, `goals`, `activity`
-**Write**: `update-task`, `create-task`, `update-task-full`, `delete-task`, `spawn-agent`, `update-kpi`, `update-project`, `create-directive`, `update-goal`
+**Read**: `dashboard`, `agents`, `tasks`, `messages`, `kpis`, `goals`, `activity`, `feature-requests`
+**Write**: `update-task`, `create-task`, `update-task-full`, `delete-task`, `spawn-agent`, `update-kpi`, `update-project`, `create-directive`, `update-goal`, `create-feature-request`, `update-feature-request`, `delete-feature-request`, `update-agent`
 **Chat**: `cea-brain` (POST with `{ message, thread_id }`)
 
 ### Data Mapping
@@ -101,7 +106,8 @@ Supabase returns raw database rows. `App.tsx` contains mapper functions that tra
 | `KPI` | id, label, value, change, trend (`up`/`down`/`stable`) | Dashboard |
 | `Message` | id, from, content, type (`message`/`directive`/`report`/`alert`/`system`) | ChatInterface |
 | `ActivityItem` | id, agent, action, detail, type (`task`/`decision`/`report`/`spawn`/`alert`) | Dashboard |
-| `ViewType` | `'dashboard'`/`'agents'`/`'tasks'`/`'projects'`/`'project-detail'`/`'chat'`/`'strategy'` | App, Sidebar |
+| `FeatureRequest` | id, title, description, screenshotUrl, status (`new`/`acknowledged`/`in_progress`/`done`/`dismissed`), priority | IdeasView, IdeaCaptureModal |
+| `ViewType` | `'dashboard'`/`'agents'`/`'agent-detail'`/`'tasks'`/`'projects'`/`'project-detail'`/`'chat'`/`'strategy'`/`'ideas'` | App, Sidebar |
 
 ## Component Guide
 
@@ -112,6 +118,9 @@ Manages all application state and passes handlers down as props. Key state:
 - `selectedProjectId` — for project-detail view routing
 - `isLive` — whether data loaded from Supabase (vs fallback)
 - `chatThread` — current chat thread ID
+- `featureRequests` — ideas/feature requests array
+- `selectedAgentId` — for agent-detail view routing
+- `ideaModalOpen` — controls IdeaCaptureModal visibility
 
 On mount, calls `loadLiveData()` which fetches everything from Supabase in parallel. If any call fails, falls back to mock data from `data.ts`.
 
@@ -149,6 +158,15 @@ Chat with The CEA (Claude Sonnet 4.5). Renders markdown inline (bold, italic, he
 ### Strategy.tsx
 Strategic goals view. Shows mission statement, goal cards with progress bars, status toggle buttons, initiative lists. Click progress bar or percentage to edit. Connected to live `goals` table in Supabase.
 
+### AgentDetail.tsx
+Agent profile page with 4 tabs (Identity, Brain, Tools, Activity). Edit system prompt, functional name, tool access. Activate/deactivate agents. Entered via AgentHub.
+
+### IdeasView.tsx
+Feature request manager. Status filter tabs, expandable cards with inline editing, status/priority controls, delete with confirmation.
+
+### IdeaCaptureModal.tsx
+Quick idea capture. Floating action button (bottom-right) + modal (Cmd+I shortcut). Title, optional description, screenshot paste (Cmd+V), priority selector.
+
 ## Build System
 
 ### Why IIFE?
@@ -167,7 +185,11 @@ build: {
 ```
 
 ### Bundle Process
-After `npx vite build` creates `dist/assets/index-*.js` (and optionally `.css`), `bundle.cjs` reads those files and inlines them into a single HTML file. This produces `cea-dashboard.html` — one file, zero dependencies, works offline (except API calls).
+After `npx vite build` creates `dist/assets/index-*.js` and `.css`, the bundler script reads those files and inlines them into a single HTML file. Two scripts available (both produce identical output):
+- `node scripts/inline-build.mjs cea-dashboard.html` (ESM, preferred)
+- `node bundle.cjs` (CommonJS, legacy)
+
+This produces `cea-dashboard.html` — one file, zero dependencies, works offline (except API calls).
 
 ## UX Patterns
 
@@ -231,6 +253,6 @@ Tailwind classes are used inline. The theme is configured in `tailwind.config.js
 
 ### Rebuilding after changes
 ```bash
-npx vite build && node bundle.cjs
+npx vite build && node scripts/inline-build.mjs cea-dashboard.html
 ```
 Output: `cea-dashboard.html` in this folder. That single file is the deliverable.

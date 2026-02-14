@@ -1,14 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ViewType, Agent, Task, Message, KPI, ActivityItem, Project, Department, Goal } from './types';
+import { ViewType, Agent, Task, Message, KPI, ActivityItem, Project, Department, Goal, FeatureRequest } from './types';
 import { initialAgents, initialTasks, initialMessages, initialKPIs, initialActivity, initialProjects, initialDepartments } from './data';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { AgentHub } from './components/AgentHub';
+import { AgentDetail } from './components/AgentDetail';
 import { TaskBoard } from './components/TaskBoard';
 import { ProjectsView } from './components/ProjectsView';
 import { ChatInterface } from './components/ChatInterface';
 import { Strategy } from './components/Strategy';
 import { ProjectDetail } from './components/ProjectDetail';
+import { IdeaCaptureModal, IdeaFAB } from './components/IdeaCaptureModal';
+import { IdeasView } from './components/IdeasView';
 import * as api from './api';
 
 // Map Supabase agent_personas to our Agent interface
@@ -108,7 +111,7 @@ function mapActivity(a: any): ActivityItem {
   };
   const timeDiff = Date.now() - new Date(a.created_at).getTime();
   const mins = Math.floor(timeDiff / 60000);
-  const timeStr = mins < 1 ? 'Just now' : mins < 60 ? `${mins}m ago` : `${Math.floor(mins/60)}h ago`;
+  const timeStr = mins < 1 ? 'Just now' : mins < 60 ? `${mins}m ago` : `${Math.floor(mins / 60)}h ago`;
   return {
     id: a.id,
     agent: a.agent_handle || 'System',
@@ -146,6 +149,21 @@ function App() {
   const [threadId, setThreadId] = useState<string | undefined>();
   const [rawAgents, setRawAgents] = useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
+  const [ideaModalOpen, setIdeaModalOpen] = useState(false);
+
+  // Cmd+I shortcut for idea capture
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+        e.preventDefault();
+        setIdeaModalOpen(prev => !prev);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Load live data on mount
   useEffect(() => {
@@ -191,6 +209,31 @@ function App() {
       setLoading(false);
     }
     loadData();
+  }, []);
+
+  // Load feature requests
+  useEffect(() => {
+    async function loadFeatureRequests() {
+      try {
+        const data = await api.fetchFeatureRequests();
+        if (Array.isArray(data)) {
+          setFeatureRequests(data.map((fr: any) => ({
+            id: fr.id,
+            title: fr.title,
+            description: fr.description || undefined,
+            screenshotUrl: fr.screenshot_url || undefined,
+            sourceView: fr.source_view || undefined,
+            status: fr.status || 'new',
+            priority: fr.priority || 'medium',
+            createdAt: fr.created_at,
+            updatedAt: fr.updated_at,
+          })));
+        }
+      } catch (e) {
+        console.log('Feature requests unavailable:', e);
+      }
+    }
+    loadFeatureRequests();
   }, []);
 
   const pendingTaskCount = tasks.filter(
@@ -472,6 +515,81 @@ function App() {
     }
   }, [isLive, goals]);
 
+  // Feature Request handlers
+  const handleCreateFeatureRequest = useCallback(async (data: { title: string; description?: string; screenshotUrl?: string; sourceView?: string; priority?: string }) => {
+    // Optimistic add
+    const tempFr: FeatureRequest = {
+      id: `temp-${Date.now()}`,
+      title: data.title,
+      description: data.description,
+      screenshotUrl: data.screenshotUrl,
+      sourceView: data.sourceView,
+      status: 'new',
+      priority: (data.priority as any) || 'medium',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setFeatureRequests(prev => [tempFr, ...prev]);
+
+    if (isLive) {
+      try {
+        const result = await api.createFeatureRequest(data.title, data.description, data.screenshotUrl, data.sourceView, data.priority);
+        if (result?.data?.[0]) {
+          setFeatureRequests(prev => prev.map(fr => fr.id === tempFr.id ? {
+            ...tempFr,
+            id: result.data[0].id,
+            createdAt: result.data[0].created_at,
+            updatedAt: result.data[0].updated_at,
+          } : fr));
+        }
+      } catch (e) { console.error('Create feature request error:', e); }
+    }
+
+    setActivity(prev => [{
+      id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
+      action: 'Captured idea', detail: data.title,
+      timestamp: 'Just now', type: 'task',
+    }, ...prev]);
+  }, [isLive]);
+
+  const handleUpdateFeatureRequest = useCallback(async (id: string, updates: { status?: string; priority?: string; title?: string; description?: string }) => {
+    setFeatureRequests(prev => prev.map(fr => fr.id === id ? { ...fr, ...updates, updatedAt: new Date().toISOString() } as FeatureRequest : fr));
+    if (isLive) {
+      try {
+        await api.updateFeatureRequest(id, updates);
+      } catch (e) { console.error('Update feature request error:', e); }
+    }
+  }, [isLive]);
+
+  const handleDeleteFeatureRequest = useCallback(async (id: string) => {
+    setFeatureRequests(prev => prev.filter(fr => fr.id !== id));
+    if (isLive) {
+      try {
+        await api.deleteFeatureRequest(id);
+      } catch (e) { console.error('Delete feature request error:', e); }
+    }
+  }, [isLive]);
+
+  // Agent Profile handler
+  const handleUpdateAgent = useCallback(async (agentId: string, updates: { system_prompt?: string; functional_name?: string; tool_access?: string[]; is_active?: boolean }) => {
+    if (isLive) {
+      try {
+        await api.updateAgent(agentId, updates);
+      } catch (e) { console.error('Agent update error:', e); }
+    }
+
+    // Update local state
+    setAgents(prev => prev.map(a => {
+      if (a.id !== agentId) return a;
+      const updated = { ...a };
+      if (updates.functional_name) updated.role = updates.functional_name;
+      if (updates.is_active !== undefined) updated.status = updates.is_active ? 'active' : 'idle';
+      return updated;
+    }));
+  }, [isLive]);
+
+  const newIdeaCount = featureRequests.filter(fr => fr.status === 'new').length;
+
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden" style={{ fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif" }}>
       {/* Connection status indicator */}
@@ -487,6 +605,7 @@ function App() {
         agents={agents}
         pendingTaskCount={pendingTaskCount}
         projectCount={projects.length}
+        ideaCount={newIdeaCount}
       />
       {currentView === 'dashboard' && (
         <Dashboard kpis={kpis} activity={activity} tasks={tasks} agents={agents} projects={projects} onNavigate={(v) => setCurrentView(v as ViewType)} />
@@ -517,7 +636,25 @@ function App() {
         );
       })()}
       {currentView === 'agents' && (
-        <AgentHub agents={agents} onSpawnAgent={handleSpawnAgent} />
+        <AgentHub agents={agents} onSpawnAgent={handleSpawnAgent} onViewAgent={(id) => { setSelectedAgentId(id); setCurrentView('agent-detail'); }} />
+      )}
+      {currentView === 'agent-detail' && selectedAgentId && (() => {
+        const agent = agents.find(a => a.id === selectedAgentId);
+        if (!agent) return null;
+        return (
+          <AgentDetail
+            agent={agent}
+            onBack={() => setCurrentView('agents')}
+            onUpdateAgent={handleUpdateAgent}
+          />
+        );
+      })()}
+      {currentView === 'ideas' && (
+        <IdeasView
+          featureRequests={featureRequests}
+          onUpdateFeatureRequest={handleUpdateFeatureRequest}
+          onDeleteFeatureRequest={handleDeleteFeatureRequest}
+        />
       )}
       {currentView === 'tasks' && (
         <TaskBoard
@@ -536,6 +673,15 @@ function App() {
       {currentView === 'strategy' && (
         <Strategy kpis={kpis} agents={agents} goals={goals} onUpdateGoal={handleUpdateGoal} />
       )}
+
+      {/* Idea Capture FAB + Modal */}
+      <IdeaFAB onClick={() => setIdeaModalOpen(true)} ideaCount={newIdeaCount} />
+      <IdeaCaptureModal
+        isOpen={ideaModalOpen}
+        onClose={() => setIdeaModalOpen(false)}
+        onSubmit={handleCreateFeatureRequest}
+        currentView={currentView}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ interface SidebarProps {
   agents: Agent[];
   pendingTaskCount: number;
   projectCount: number;
+  ideaCount?: number;
 }
 
 const navItems: { id: ViewType; label: string; icon: string }[] = [
@@ -16,9 +17,10 @@ const navItems: { id: ViewType; label: string; icon: string }[] = [
   { id: 'tasks', label: 'Task Board', icon: '☰' },
   { id: 'chat', label: 'Talk to CEA', icon: '◈' },
   { id: 'strategy', label: 'Strategy', icon: '△' },
+  { id: 'ideas', label: 'Ideas', icon: '💡' },
 ];
 
-export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, projectCount }: SidebarProps) {
+export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, projectCount, ideaCount = 0 }: SidebarProps) {
   const activeAgents = agents.filter(a => a.status === 'active' || a.status === 'working').length;
 
   return (
@@ -74,6 +76,11 @@ export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, p
             {item.id === 'projects' && projectCount > 0 && (
               <span className="ml-auto text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-sm font-medium">
                 {projectCount}
+              </span>
+            )}
+            {item.id === 'ideas' && ideaCount > 0 && (
+              <span className="ml-auto text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-sm font-medium">
+                {ideaCount}
               </span>
             )}
           </button>

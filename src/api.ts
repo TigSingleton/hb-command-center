@@ -138,3 +138,40 @@ export async function sendMessageToCEA(message: string, threadId?: string): Prom
     body: JSON.stringify({ message, thread_id: threadId }),
   });
 }
+
+// ============ FEATURE REQUESTS ============
+
+export async function fetchFeatureRequests(status?: string) {
+  const params = status ? `&status=${status}` : '';
+  return apiFetch(`${CEA_API}?action=feature-requests${params}`);
+}
+
+export async function createFeatureRequest(title: string, description?: string, screenshotUrl?: string, sourceView?: string, priority?: string) {
+  return apiFetch(`${CEA_API}?action=create-feature-request`, {
+    method: 'POST',
+    body: JSON.stringify({ title, description, screenshot_url: screenshotUrl, source_view: sourceView, priority }),
+  });
+}
+
+export async function updateFeatureRequest(id: string, updates: { status?: string; priority?: string; title?: string; description?: string }) {
+  return apiFetch(`${CEA_API}?action=update-feature-request`, {
+    method: 'POST',
+    body: JSON.stringify({ id, ...updates }),
+  });
+}
+
+export async function deleteFeatureRequest(id: string) {
+  return apiFetch(`${CEA_API}?action=delete-feature-request`, {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+  });
+}
+
+// ============ AGENT PROFILES ============
+
+export async function updateAgent(agentId: string, updates: { system_prompt?: string; functional_name?: string; tool_access?: string[]; is_active?: boolean }) {
+  return apiFetch(`${CEA_API}?action=update-agent`, {
+    method: 'POST',
+    body: JSON.stringify({ agent_id: agentId, ...updates }),
+  });
+}

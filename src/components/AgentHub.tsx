@@ -9,9 +9,10 @@ import { spawnableAgents } from '../data';
 interface AgentHubProps {
   agents: Agent[];
   onSpawnAgent: (name: string, emoji: string, role: string, description: string) => void;
+  onViewAgent?: (agentId: string) => void;
 }
 
-export function AgentHub({ agents, onSpawnAgent }: AgentHubProps) {
+export function AgentHub({ agents, onSpawnAgent, onViewAgent }: AgentHubProps) {
   const [showSpawn, setShowSpawn] = useState(false);
   const [selectedSpawn, setSelectedSpawn] = useState<typeof spawnableAgents[0] | null>(null);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export function AgentHub({ agents, onSpawnAgent }: AgentHubProps) {
               Oversees all operations for HeartBased.io. Manages Tiger as Employee #1.
               Cannot fire Tiger — must optimize, motivate, and delegate to maximize impact.
             </p>
-            <div className="flex gap-6 text-xs">
+            <div className="flex items-center gap-6 text-xs">
               <div>
                 <span className="text-zinc-600">Decisions Made</span>
                 <div className="text-zinc-200 font-medium">{agents.find(a => a.id === 'cea')?.metrics.decisions || 0}</div>
@@ -74,6 +75,17 @@ export function AgentHub({ agents, onSpawnAgent }: AgentHubProps) {
                 <span className="text-zinc-600">Uptime</span>
                 <div className="text-zinc-200 font-medium">{agents.find(a => a.id === 'cea')?.uptime || '—'}</div>
               </div>
+              {onViewAgent && (
+                <button
+                  onClick={() => {
+                    const cea = agents.find(a => a.id === 'cea');
+                    if (cea) onViewAgent(cea.id);
+                  }}
+                  className="ml-auto text-xs text-amber-400/70 hover:text-amber-400 transition-colors flex items-center gap-1"
+                >
+                  View Profile →
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -132,8 +144,18 @@ export function AgentHub({ agents, onSpawnAgent }: AgentHubProps) {
                         </div>
                       ))}
                     </div>
-                    <div className="text-[10px] text-zinc-600 mt-2">
-                      Tasks completed: {agent.tasksCompleted} · Uptime: {agent.uptime}
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="text-[10px] text-zinc-600">
+                        Tasks completed: {agent.tasksCompleted} · Uptime: {agent.uptime}
+                      </div>
+                      {onViewAgent && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onViewAgent(agent.id); }}
+                          className="text-xs text-teal-400/70 hover:text-teal-400 transition-colors flex items-center gap-1"
+                        >
+                          View Profile →
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
