@@ -11,13 +11,6 @@ export default defineConfig({
   },
   build: {
     cssCodeSplit: false,
-    rollupOptions: {
-      output: {
-        format: 'iife',
-        inlineDynamicImports: true,
-        manualChunks: undefined,
-      },
-    },
-    assetsInlineLimit: 100000000, // Inline all assets
+    outDir: 'dist',
   },
 });
