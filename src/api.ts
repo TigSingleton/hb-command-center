@@ -1,12 +1,18 @@
+import { getAccessToken } from './auth';
+
 const SUPABASE_URL = 'https://gusdhnpsjmpueevnivsi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1c2RobnBzam1wdWVldm5pdnNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDkxODQsImV4cCI6MjA4NTg4NTE4NH0._Oc6LYw87DaQJx_Bu_ele8ZtMpiNEmEQEpEnvbaWSn4';
 const CEA_API = `${SUPABASE_URL}/functions/v1/cea-api`;
 const CEA_BRAIN = `${SUPABASE_URL}/functions/v1/cea-brain`;
 
 async function apiFetch(url: string, options?: RequestInit) {
+  const token = await getAccessToken();
   const res = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(options?.headers || {}),
     },
   });

@@ -13,7 +13,10 @@ import { ProjectDetail } from './components/ProjectDetail';
 import { IdeaCaptureModal, IdeaFAB } from './components/IdeaCaptureModal';
 import { TaskCaptureModal, TaskFAB } from './components/TaskCaptureModal';
 import { IdeasView } from './components/IdeasView';
+import { LoginScreen } from './components/LoginScreen';
 import * as api from './api';
+import { supabase, signOut } from './auth';
+import type { Session } from '@supabase/supabase-js';
 
 // Map Supabase agent_personas to our Agent interface
 function mapAgent(a: any): Agent {
@@ -140,6 +143,38 @@ function mapMessage(m: any): Message {
 }
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Auth gate
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-600 text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen onAuthenticated={() => {}} />;
+  }
+
+  return <AuthenticatedApp session={session} />;
+}
+
+function AuthenticatedApp({ session }: { session: Session }) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [agents, setAgents] = useState<Agent[]>(initialAgents);
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
@@ -679,6 +714,7 @@ function App() {
         pendingTaskCount={pendingTaskCount}
         projectCount={projects.length}
         ideaCount={newIdeaCount}
+        onSignOut={() => signOut()}
       />
       {currentView === 'dashboard' && (
         <Dashboard kpis={kpis} activity={activity} tasks={tasks} agents={agents} projects={projects} onNavigate={(v) => setCurrentView(v as ViewType)} />

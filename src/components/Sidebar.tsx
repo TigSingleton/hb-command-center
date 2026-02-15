@@ -8,6 +8,7 @@ interface SidebarProps {
   pendingTaskCount: number;
   projectCount: number;
   ideaCount?: number;
+  onSignOut?: () => void;
 }
 
 const navItems: { id: ViewType; label: string; icon: string }[] = [
@@ -20,7 +21,7 @@ const navItems: { id: ViewType; label: string; icon: string }[] = [
   { id: 'ideas', label: 'Ideas', icon: '💡' },
 ];
 
-export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, projectCount, ideaCount = 0 }: SidebarProps) {
+export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, projectCount, ideaCount = 0, onSignOut }: SidebarProps) {
   const activeAgents = agents.filter(a => a.status === 'active' || a.status === 'working').length;
 
   return (
@@ -118,6 +119,15 @@ export function Sidebar({ currentView, onViewChange, agents, pendingTaskCount, p
             <div className="text-xs font-medium text-zinc-300">Tiger Singleton</div>
             <div className="text-[10px] text-zinc-600">Founder · Employee #1</div>
           </div>
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors px-1.5 py-0.5"
+              title="Sign out"
+            >
+              Sign out
+            </button>
+          )}
         </div>
       </div>
     </div>
