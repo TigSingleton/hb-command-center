@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Project, Task, Agent } from '../types';
+import { Project, Task, Agent, Department } from '../types';
 
 // Inline editable text field — click to edit, Enter to save, Escape to cancel
 function EditableField({ value, placeholder, onSave, multiline, className }: {
@@ -74,8 +74,11 @@ interface ProjectsViewProps {
   projects: Project[];
   tasks: Task[];
   agents: Agent[];
+  departments: Department[];
   onNavigateToTask: () => void;
   onUpdateProject: (projectId: string, updates: Partial<Project>) => void;
+  onCreateProject: (data: { title: string; deptId?: string; description?: string; parentProjectId?: string }) => void;
+  onDeleteProject: (projectId: string) => void;
   onOpenProject?: (projectId: string) => void;
 }
 
@@ -86,9 +89,16 @@ type SortDir = 'asc' | 'desc';
 const STATUS_OPTIONS: Project['status'][] = ['active', 'paused', 'completed', 'archived'];
 const ALL_STATUSES = 'all';
 
-export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpdateProject, onOpenProject }: ProjectsViewProps) {
+export function ProjectsView({ projects, tasks, agents, departments, onNavigateToTask, onUpdateProject, onCreateProject, onDeleteProject, onOpenProject }: ProjectsViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDeptId, setNewDeptId] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newParentId, setNewParentId] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const newTitleRef = useRef<HTMLInputElement>(null);
 
   // Filters
   const [deptFilter, setDeptFilter] = useState<string>(ALL_STATUSES);
@@ -98,7 +108,23 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
   const [sortField, setSortField] = useState<SortField>('department');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  const departments = useMemo(() => [...new Set(projects.map(p => p.department))].sort(), [projects]);
+  const deptNames = useMemo(() => [...new Set(projects.map(p => p.department))].sort(), [projects]);
+
+  // Sub-project helpers
+  const getChildProjects = (parentId: string) => projects.filter(p => p.parentProjectId === parentId);
+  const topLevelProjects = useMemo(() => projects.filter(p => !p.parentProjectId), [projects]);
+
+  const handleCreateProject = () => {
+    if (!newTitle.trim()) return;
+    onCreateProject({ title: newTitle.trim(), deptId: newDeptId || undefined, description: newDescription.trim() || undefined, parentProjectId: newParentId || undefined });
+    setNewTitle('');
+    setNewDeptId('');
+    setNewDescription('');
+    setNewParentId('');
+    setShowNewForm(false);
+  };
+
+  useEffect(() => { if (showNewForm) newTitleRef.current?.focus(); }, [showNewForm]);
 
   const getProjectTasks = (projectId: string) => tasks.filter(t => t.projectId === projectId);
 
@@ -112,7 +138,7 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
   const filteredProjects = useMemo(() => {
     let result = [...projects];
     if (deptFilter !== ALL_STATUSES) {
-      result = result.filter(p => p.department === deptFilter);
+      result = result.filter(p => p.department === deptFilter || (p.parentProjectId && projects.find(pp => pp.id === p.parentProjectId)?.department === deptFilter));
     }
     if (statusFilter !== ALL_STATUSES) {
       result = result.filter(p => p.status === statusFilter);
@@ -373,8 +399,82 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
               />
             </div>
 
+            {/* Sub-projects */}
+            {(() => {
+              const children = getChildProjects(project.id);
+              return children.length > 0 ? (
+                <div className="px-4 py-3 border-b border-zinc-800/30">
+                  <div className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">
+                    Sub-projects ({children.length})
+                  </div>
+                  <div className="space-y-1.5">
+                    {children.map(child => {
+                      const childTasks = getProjectTasks(child.id);
+                      const childDone = childTasks.filter(t => t.status === 'completed').length;
+                      return (
+                        <div
+                          key={child.id}
+                          className="flex items-center justify-between py-1.5 px-2 bg-zinc-800/30 hover:bg-zinc-800/60 cursor-pointer transition-colors"
+                          onClick={(e) => { e.stopPropagation(); onOpenProject?.(child.id); }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-amber-400/70">{child.shortCode}</span>
+                            <span className="text-xs text-zinc-300">{child.title.replace(/^PR\.\w+\s*\|\s*/, '')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {childTasks.length > 0 && (
+                              <span className="text-[10px] text-zinc-500">{childDone}/{childTasks.length}</span>
+                            )}
+                            <span className={cn(
+                              'text-[9px] px-1.5 py-0.5',
+                              child.status === 'active' && 'bg-emerald-500/15 text-emerald-400',
+                              child.status === 'paused' && 'bg-zinc-700 text-zinc-400',
+                              child.status === 'completed' && 'bg-blue-500/15 text-blue-400',
+                              child.status === 'archived' && 'bg-zinc-800 text-zinc-600',
+                            )}>{child.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setNewParentId(project.id); setShowNewForm(true); }}
+                    className="text-[10px] text-amber-400/50 hover:text-amber-400 mt-2 transition-colors"
+                  >
+                    + Add sub-project
+                  </button>
+                </div>
+              ) : (
+                <div className="px-4 py-3 border-b border-zinc-800/30">
+                  <div className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Sub-projects</div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setNewParentId(project.id); setShowNewForm(true); }}
+                    className="text-[10px] text-amber-400/50 hover:text-amber-400 transition-colors"
+                  >
+                    + Add sub-project
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* Parent project link */}
+            {project.parentProjectId && (() => {
+              const parent = projects.find(p => p.id === project.parentProjectId);
+              return parent ? (
+                <div className="px-4 py-2 border-b border-zinc-800/30">
+                  <span className="text-[10px] text-zinc-600 uppercase tracking-wider mr-2">Parent</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onOpenProject?.(parent.id); }}
+                    className="text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors"
+                  >
+                    {parent.shortCode} — {parent.title.replace(/^PR\.\w+\s*\|\s*/, '')}
+                  </button>
+                </div>
+              ) : null;
+            })()}
+
             {/* Tasks list */}
-            <div className="px-4 py-3">
+            <div className="px-4 py-3 border-b border-zinc-800/30">
               {projectTasks.length > 0 ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
@@ -430,6 +530,34 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
                 </div>
               )}
             </div>
+
+            {/* Delete project */}
+            <div className="px-4 py-3">
+              {confirmDelete === project.id ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-red-400">Delete this project?</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); setConfirmDelete(null); setExpandedProject(null); }}
+                    className="text-[10px] px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
+                  >
+                    Yes, delete
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(null); }}
+                    className="text-[10px] text-zinc-500 hover:text-zinc-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(project.id); }}
+                  className="text-[10px] text-zinc-600 hover:text-red-400 transition-colors"
+                >
+                  Delete project
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -446,26 +574,40 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
             {projects.length} projects · {totalTasks} tasks assigned · {completedTasks} completed
           </p>
         </div>
-        {/* View toggle */}
-        <div className="flex gap-1 bg-zinc-900 border border-zinc-800 p-0.5">
+        <div className="flex items-center gap-2">
+          {/* New Project button */}
           <button
-            onClick={() => setViewMode('cards')}
+            onClick={() => setShowNewForm(!showNewForm)}
             className={cn(
-              'px-3 py-1.5 text-xs transition-all',
-              viewMode === 'cards' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'
+              'px-3 py-1.5 text-xs font-medium transition-all border',
+              showNewForm
+                ? 'bg-zinc-800 text-zinc-300 border-zinc-600'
+                : 'bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
             )}
           >
-            Cards
+            {showNewForm ? 'Cancel' : '+ New Project'}
           </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={cn(
-              'px-3 py-1.5 text-xs transition-all',
-              viewMode === 'list' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'
-            )}
-          >
-            List
-          </button>
+          {/* View toggle */}
+          <div className="flex gap-1 bg-zinc-900 border border-zinc-800 p-0.5">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'px-3 py-1.5 text-xs transition-all',
+                viewMode === 'cards' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'
+              )}
+            >
+              Cards
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                'px-3 py-1.5 text-xs transition-all',
+                viewMode === 'list' ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'
+              )}
+            >
+              List
+            </button>
+          </div>
         </div>
       </div>
 
@@ -484,7 +626,7 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
             >
               All
             </button>
-            {departments.map(dept => (
+            {deptNames.map(dept => (
               <button
                 key={dept}
                 onClick={() => setDeptFilter(dept)}
@@ -556,9 +698,83 @@ export function ProjectsView({ projects, tasks, agents, onNavigateToTask, onUpda
         </div>
       </div>
 
+      {/* New Project Form */}
+      {showNewForm && (
+        <div className="bg-zinc-900 border border-amber-500/30 p-4 mb-5">
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">Project Name</label>
+              <input
+                ref={newTitleRef}
+                type="text"
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleCreateProject(); if (e.key === 'Escape') setShowNewForm(false); }}
+                placeholder="e.g. PR.WEBSITE | Redesign Landing Page"
+                className="w-full bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">Department</label>
+              <select
+                value={newDeptId}
+                onChange={e => setNewDeptId(e.target.value)}
+                className="w-full bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50"
+              >
+                <option value="">Select department...</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">Description (optional)</label>
+              <input
+                type="text"
+                value={newDescription}
+                onChange={e => setNewDescription(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleCreateProject(); }}
+                placeholder="What's this project about?"
+                className="w-full bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-zinc-500 uppercase tracking-wider block mb-1">Parent Project (optional — makes this a sub-project)</label>
+              <select
+                value={newParentId}
+                onChange={e => setNewParentId(e.target.value)}
+                className="w-full bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50"
+              >
+                <option value="">None (top-level project)</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.shortCode ? `${p.shortCode} — ` : ''}{p.title.replace(/^PR\.\w+\s*\|\s*/, '')}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCreateProject}
+              disabled={!newTitle.trim()}
+              className="px-4 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Create Project
+            </button>
+            <button
+              onClick={() => setShowNewForm(false)}
+              className="px-4 py-1.5 text-xs text-zinc-500 hover:text-zinc-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-3 mb-6">
-        {departments.map((dept) => {
+        {deptNames.map((dept) => {
           const deptProjects = projects.filter(p => p.department === dept);
           const deptTasks = tasks.filter(t => {
             const project = projects.find(p => p.id === t.projectId);

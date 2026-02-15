@@ -244,6 +244,9 @@ function AuthenticatedApp({ session }: { session: Session }) {
         if (data.messages?.length) {
           setMessages(data.messages.map(mapMessage));
         }
+        if (data.departments?.length) {
+          setDepartments(data.departments.map((d: any) => ({ id: d.id, name: d.name })));
+        }
 
         setIsLive(true);
       } catch (e) {
@@ -623,6 +626,68 @@ function AuthenticatedApp({ session }: { session: Session }) {
     }
   }, [isLive, goals]);
 
+  // Departments from raw data
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+
+  // Create project
+  const handleCreateProject = useCallback(async (data: { title: string; deptId?: string; description?: string; parentProjectId?: string }) => {
+    const dept = departments.find(d => d.id === data.deptId);
+    const parentProject = data.parentProjectId ? projects.find(p => p.id === data.parentProjectId) : null;
+
+    const tempProject: Project = {
+      id: `temp-${Date.now()}`,
+      title: data.title,
+      shortCode: data.title.match(/^PR\.(\w+)/)?.[1] || data.title.substring(0, 4).toUpperCase(),
+      description: data.description,
+      status: 'active',
+      department: dept?.name || parentProject?.department || 'Unknown',
+      departmentId: data.deptId || parentProject?.departmentId,
+      taskCount: 0,
+      completedTaskCount: 0,
+      createdAt: new Date().toISOString(),
+      parentProjectId: data.parentProjectId,
+    };
+    setProjects(prev => [tempProject, ...prev]);
+
+    if (isLive) {
+      try {
+        const result = await api.createProject(data.title, data.deptId, data.description, undefined, undefined, data.parentProjectId);
+        if (result?.data?.[0]) {
+          setProjects(prev => prev.map(p => p.id === tempProject.id ? { ...tempProject, id: result.data[0].id } : p));
+        }
+      } catch (e) { console.error('Create project error:', e); }
+    }
+
+    setActivity(prev => [{
+      id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
+      action: 'Created project', detail: data.title,
+      timestamp: 'Just now', type: 'task',
+    }, ...prev]);
+  }, [isLive, departments, projects]);
+
+  // Delete project
+  const handleDeleteProject = useCallback(async (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    // Unlink child projects locally
+    setProjects(prev => prev.filter(p => p.id !== projectId).map(p => p.parentProjectId === projectId ? { ...p, parentProjectId: undefined } : p));
+    // Unlink tasks locally
+    setTasks(prev => prev.map(t => t.projectId === projectId ? { ...t, projectId: undefined, projectName: undefined, projectShortCode: undefined } : t));
+
+    if (isLive) {
+      try {
+        await api.deleteProject(projectId);
+      } catch (e) { console.error('Delete project error:', e); }
+    }
+
+    if (project) {
+      setActivity(prev => [{
+        id: `a${Date.now()}`, agent: 'Tiger', agentEmoji: '🐯',
+        action: 'Deleted project', detail: project.title,
+        timestamp: 'Just now', type: 'task',
+      }, ...prev]);
+    }
+  }, [isLive, projects]);
+
   // Feature Request handlers
   const handleCreateFeatureRequest = useCallback(async (data: { title: string; description?: string; screenshotUrl?: string; sourceView?: string; priority?: string }) => {
     // Optimistic add
@@ -721,9 +786,11 @@ function AuthenticatedApp({ session }: { session: Session }) {
       )}
       {currentView === 'projects' && (
         <ProjectsView
-          projects={projects} tasks={tasks} agents={agents}
+          projects={projects} tasks={tasks} agents={agents} departments={departments}
           onNavigateToTask={() => setCurrentView('tasks')}
           onUpdateProject={handleUpdateProject}
+          onCreateProject={handleCreateProject}
+          onDeleteProject={handleDeleteProject}
           onOpenProject={(id) => { setSelectedProjectId(id); setCurrentView('project-detail'); }}
         />
       )}

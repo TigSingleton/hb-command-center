@@ -186,6 +186,22 @@ export async function deleteFeatureRequest(id: string) {
   });
 }
 
+// ============ PROJECTS ============
+
+export async function createProject(title: string, deptId?: string, description?: string, targetDate?: string, leadAgentId?: string, parentProjectId?: string) {
+  return apiFetch(`${CEA_API}?action=create-project`, {
+    method: 'POST',
+    body: JSON.stringify({ title, dept_id: deptId, description, target_date: targetDate, lead_agent_id: leadAgentId, parent_project_id: parentProjectId }),
+  });
+}
+
+export async function deleteProject(projectId: string) {
+  return apiFetch(`${CEA_API}?action=delete-project`, {
+    method: 'POST',
+    body: JSON.stringify({ project_id: projectId }),
+  });
+}
+
 // ============ AGENT PROFILES ============
 
 export async function updateAgent(agentId: string, updates: { system_prompt?: string; functional_name?: string; tool_access?: string[]; is_active?: boolean }) {
