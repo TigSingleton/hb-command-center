@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signIn, signUp } from '../auth';
+import { signIn } from '../auth';
 
 interface LoginScreenProps {
   onAuthenticated: () => void;
@@ -8,26 +8,17 @@ interface LoginScreenProps {
 export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setLoading(true);
 
     try {
-      if (mode === 'signup') {
-        await signUp(email, password);
-        setSuccess('Account created. Check your email to confirm, then sign in.');
-        setMode('signin');
-      } else {
-        await signIn(email, password);
-        onAuthenticated();
-      }
+      await signIn(email, password);
+      onAuthenticated();
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
@@ -86,30 +77,14 @@ export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
             </div>
           )}
 
-          {success && (
-            <div className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-              {success}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading || !email || !password}
             className="w-full py-2.5 text-sm font-medium transition-all border bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? 'Working...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        {/* Toggle mode */}
-        <div className="text-center mt-6">
-          <button
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setSuccess(''); }}
-            className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
-          >
-            {mode === 'signin' ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
-          </button>
-        </div>
       </div>
     </div>
   );
